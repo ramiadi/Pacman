@@ -112,9 +112,75 @@ class Wall:
 
         return walls
 
-    def create_l_corridor(self, corner_x, corner_y, h_length, v_length, grid_blockSize, opening_direction='right_down'):
+    def create_l_corridor(self, corner_x, corner_y, h_length, v_length, grid_blockSize, opening_direction):
         walls = []
         # TODO: Implement L-corridor logic
+
+        corner_x = (corner_x // grid_blockSize) * grid_blockSize
+        corner_y = (corner_y // grid_blockSize) * grid_blockSize
+
+        # Add validation checks
+
+        # if the direction doesnt match with what is written, return empty
+        if opening_direction not in ['right_down', 'left_down', 'right_up', 'left_up']:
+            return walls
+        # if the length (horizontal or vertical) is not defined by a positive number, return empty
+        if h_length <= 0 or v_length <= 0:
+            return walls
+
+        # Wall shapes
+        # right_down
+        #   - - - - - - - - 
+        #   |
+        #   |
+        if opening_direction == 'right_down':
+            # horizontal path
+            for x in range(corner_x, corner_x + h_length, grid_blockSize):
+                walls.append(Wall(x, corner_y - grid_blockSize, grid_blockSize, grid_blockSize))
+            # left wall
+            for y in range(corner_y, corner_y + v_length, grid_blockSize):
+                walls.append(Wall(corner_x - grid_blockSize, y, grid_blockSize, grid_blockSize))
+
+            # Add the corner // upper left
+            walls.append(Wall(corner_x - grid_blockSize, corner_y - grid_blockSize, grid_blockSize, grid_blockSize))
+    
+        # left_down
+        # - - - - - - -
+        #             |
+        #             |
+        elif opening_direction == 'left_down':
+            # Horizontal top wall (going LEFT from corner)
+            for x in range(corner_x - h_length, corner_x + grid_blockSize, grid_blockSize):
+                walls.append(Wall(x, corner_y - grid_blockSize, grid_blockSize, grid_blockSize))
+            # Vertical right wall (going DOWN from corner)
+            for y in range(corner_y, corner_y + v_length, grid_blockSize):
+                walls.append(Wall(corner_x + grid_blockSize, y, grid_blockSize, grid_blockSize))
+            # Upper-right corner
+            walls.append(Wall(corner_x + grid_blockSize, corner_y - grid_blockSize, grid_blockSize, grid_blockSize))
+        
+        # right_up
+        # |
+        # |
+        # - - - - - - - -
+        elif opening_direction == 'right_up':
+            for x in range(corner_x - h_length, corner_x + grid_blockSize, grid_blockSize):
+                walls.append(Wall(x, corner_y - grid_blockSize, grid_blockSize, grid_blockSize))
+            # Left wall (left of corridor)
+            for y in range(corner_y, corner_y + v_length, grid_blockSize):
+                walls.append(Wall(corner_x + grid_blockSize, y, grid_blockSize, grid_blockSize))
+
+            # Upper-right corner
+            # walls.append(Wall(corner_x + grid_blockSize, corner_y - grid_blockSize, grid_blockSize, grid_blockSize))
+        
+            
+            
+
+        # left_up
+        #                 |
+        #                 |
+        # - - - - - - - - -
+            
+        
         return walls 
 
 class Grid:
@@ -193,13 +259,26 @@ wall.extend(spawn_walls)
 
 # You already have a wall_generator instance
 test_corridor = wall_generator.create_corridor(
-    start_x=grid.blockSize * 12, 
+    start_x=grid.blockSize * 15, 
     start_y=grid.blockSize * 8, 
     length=grid.blockSize * 6, 
     direction='vertical', 
     grid_blockSize=grid.blockSize
 )
+
+
+
 wall.extend(test_corridor)
+
+l_test = wall_generator.create_l_corridor(
+    corner_x=grid.blockSize * 20,
+    corner_y=grid.blockSize * 5, 
+    h_length=grid.blockSize * 3,
+    v_length=grid.blockSize * 3,
+    grid_blockSize=grid.blockSize,
+    opening_direction='right_up'
+)
+wall.extend(l_test)
 
 continue_game = True
 while continue_game:
