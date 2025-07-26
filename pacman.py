@@ -137,11 +137,12 @@ class Wall:
             # horizontal path
             for x in range(corner_x, corner_x + h_length, grid_blockSize):
                 walls.append(Wall(x, corner_y - grid_blockSize, grid_blockSize, grid_blockSize))
-            # left wall
+
+            # Vertical left line
             for y in range(corner_y, corner_y + v_length, grid_blockSize):
                 walls.append(Wall(corner_x - grid_blockSize, y, grid_blockSize, grid_blockSize))
 
-            # Add the corner // upper left
+            # Corner line
             walls.append(Wall(corner_x - grid_blockSize, corner_y - grid_blockSize, grid_blockSize, grid_blockSize))
     
         # left_down
@@ -149,38 +150,52 @@ class Wall:
         #             |
         #             |
         elif opening_direction == 'left_down':
-            # Horizontal top wall (going LEFT from corner)
-            for x in range(corner_x - h_length, corner_x + grid_blockSize, grid_blockSize):
+            # Horizontal top wall (going LEFT from corner, connecting to corner)
+            for x in range(corner_x - h_length + grid_blockSize, corner_x + grid_blockSize, grid_blockSize):
                 walls.append(Wall(x, corner_y - grid_blockSize, grid_blockSize, grid_blockSize))
+
             # Vertical right wall (going DOWN from corner)
             for y in range(corner_y, corner_y + v_length, grid_blockSize):
                 walls.append(Wall(corner_x + grid_blockSize, y, grid_blockSize, grid_blockSize))
-            # Upper-right corner
+
+            # Corner line
             walls.append(Wall(corner_x + grid_blockSize, corner_y - grid_blockSize, grid_blockSize, grid_blockSize))
-        
+
         # right_up
         # |
         # |
         # - - - - - - - -
         elif opening_direction == 'right_up':
-            for x in range(corner_x - h_length, corner_x + grid_blockSize, grid_blockSize):
-                walls.append(Wall(x, corner_y - grid_blockSize, grid_blockSize, grid_blockSize))
-            # Left wall (left of corridor)
-            for y in range(corner_y, corner_y + v_length, grid_blockSize):
-                walls.append(Wall(corner_x + grid_blockSize, y, grid_blockSize, grid_blockSize))
 
-            # Upper-right corner
-            # walls.append(Wall(corner_x + grid_blockSize, corner_y - grid_blockSize, grid_blockSize, grid_blockSize))
-        
-            
+            # Horizontal bottom wall (going RIGHT from corner, includes corner)
+            for x in range(corner_x, corner_x + h_length, grid_blockSize):
+                walls.append(Wall(x, corner_y + grid_blockSize, grid_blockSize, grid_blockSize))
+
+            # Vertical left wall (going UP from corner, includes corner)
+            for y in range(corner_y - v_length + grid_blockSize, corner_y + grid_blockSize, grid_blockSize):
+                walls.append(Wall(corner_x - grid_blockSize, y, grid_blockSize, grid_blockSize))
+
+            # Corner line
+            walls.append(Wall(corner_x - grid_blockSize, corner_y + grid_blockSize, grid_blockSize, grid_blockSize))
             
 
         # left_up
         #                 |
         #                 |
         # - - - - - - - - -
-            
         
+        elif opening_direction == 'left_up':
+
+            # Horizontal line
+            for x in range(corner_x - h_length + grid_blockSize, corner_x + grid_blockSize, grid_blockSize):
+                walls.append(Wall(x, corner_y + grid_blockSize, grid_blockSize, grid_blockSize))
+            
+            # Vertical line
+            for y in range(corner_y - v_length + grid_blockSize, corner_y + grid_blockSize, grid_blockSize):
+                walls.append(Wall(corner_x + grid_blockSize, y, grid_blockSize, grid_blockSize))
+        
+            # Corner line
+            walls.append(Wall(corner_x + grid_blockSize, corner_y + grid_blockSize, grid_blockSize, grid_blockSize))
         return walls 
 
 class Grid:
@@ -276,7 +291,7 @@ l_test = wall_generator.create_l_corridor(
     h_length=grid.blockSize * 3,
     v_length=grid.blockSize * 3,
     grid_blockSize=grid.blockSize,
-    opening_direction='right_up'
+    opening_direction='left_up'
 )
 wall.extend(l_test)
 
