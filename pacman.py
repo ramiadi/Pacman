@@ -41,7 +41,7 @@ class Pacman:
 
     def movePacman(self, button):
         #Move the player using direction
-        speed = 0.5  # Movement speed
+        speed = 1  # Movement speed
         
         if button[self.key_up]:
             self.y -= speed
@@ -51,6 +51,20 @@ class Pacman:
             self.x -= speed
         elif button[self.key_right]:
             self.x += speed
+
+    def check_teleportation(self, window_height, window_width, gap_y, grid_blockSize):
+        # Check if Pacman is in the gap area first
+        if abs(self.y - gap_y) < grid_blockSize:
+            # Check if Pacman completely left the left side (including its width)
+            if self.x + self.length < 0:
+                self.x = window_width - grid_blockSize
+                return True
+            # Check if Pacman completely left the right side
+            elif self.x > window_width:
+                self.x = 0
+                return True
+        
+        return False
 
 
 class Wall:
@@ -71,14 +85,16 @@ class Wall:
     
     def border_wall(self, window_width, window_height, grid_blockSize):
         walls = []
+        gap_y = self.y + (window_height // 2 // grid_blockSize) * grid_blockSize
 
         for x in range(0, window_width, grid_blockSize):
             walls.append(Wall(x, 0, grid_blockSize, grid_blockSize))
             walls.append(Wall(x, window_height - grid_blockSize, grid_blockSize, grid_blockSize))
 
         for y in range(grid_blockSize, window_height - grid_blockSize, grid_blockSize):
-            walls.append(Wall(0, y, grid_blockSize, grid_blockSize))
-            walls.append(Wall(window_width - grid_blockSize, y, grid_blockSize, grid_blockSize)) 
+            if y != gap_y:
+                walls.append(Wall(0, y, grid_blockSize, grid_blockSize))
+                walls.append(Wall(window_width - grid_blockSize, y, grid_blockSize, grid_blockSize)) 
         return walls
 
     def create_corridor(self, start_x, start_y, length, direction, grid_blockSize):
@@ -295,6 +311,10 @@ while continue_game:
             pacman.x = old_x
             pacman.y = old_y
             break
+
+    # Check for teleportation (calculate gap_y same way as in border_wall method)
+    gap_y = (VINDU_HOYDE // 2 // grid.blockSize) * grid.blockSize
+    pacman.check_teleportation(VINDU_HOYDE, VINDU_BREDDE, gap_y, grid.blockSize)
 
     # Draw grid first (background)
     grid.drawGrid(vindu)
