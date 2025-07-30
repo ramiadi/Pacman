@@ -73,10 +73,42 @@ class Wall:
         self.y = y
         self.height = height
         self.width = width
-        self.color = (0, 0, 255)
-        
-    def draw_wall(self, screen):
+        self.color = (20, 20, 40)  # Classic Pacman blue
+    
+    def draw_wall(self, screen, all_walls=None):
+        # Draw classic blue wall
         pg.draw.rect(screen, self.color, (self.x, self.y, self.width, self.height))
+        
+        if all_walls is not None:
+            # Smart border drawing - only draw borders where there's no adjacent wall
+            self.draw_smart_borders(screen, all_walls)
+        else:
+            # Fallback: draw full border
+            pg.draw.rect(screen, (255, 0, 0), (self.x, self.y, self.width, self.height), 2)
+    
+    def draw_smart_borders(self, screen, all_walls):
+        # Check for adjacent walls
+        has_left = self.has_adjacent_wall(all_walls, self.x - self.width, self.y)
+        has_right = self.has_adjacent_wall(all_walls, self.x + self.width, self.y)
+        has_top = self.has_adjacent_wall(all_walls, self.x, self.y - self.height)
+        has_bottom = self.has_adjacent_wall(all_walls, self.x, self.y + self.height)
+        
+        # Draw borders only where there's no adjacent wall
+        if not has_left:  # Left border
+            pg.draw.line(screen, (255, 0, 0), (self.x, self.y), (self.x, self.y + self.height), 2)
+        if not has_right:  # Right border
+            pg.draw.line(screen, (255, 0, 0), (self.x + self.width, self.y), (self.x + self.width, self.y + self.height), 2)
+        if not has_top:  # Top border
+            pg.draw.line(screen, (255, 0, 0), (self.x, self.y), (self.x + self.width, self.y), 2)
+        if not has_bottom:  # Bottom border
+            pg.draw.line(screen, (255, 0, 0), (self.x, self.y + self.height), (self.x + self.width, self.y + self.height), 2)
+    
+    def has_adjacent_wall(self, all_walls, check_x, check_y):
+        # Check if there's a wall at the specified position
+        for wall in all_walls:
+            if wall.x == check_x and wall.y == check_y:
+                return True
+        return False
         
     def check_wall_collision(self, pacman):
         wall_rect = pg.Rect(self.x, self.y, self.width, self.height)
@@ -202,16 +234,16 @@ class Grid:
         self.blockSize = blockSize
     
     def drawGrid(self, screen):
-        # Set the background color (grey like in JS)
-        screen.fill((128, 128, 128))  # Grey background
+        # Set the background color to dark blue-gray like classic Pacman
+        screen.fill((20, 20, 40))  # Dark blue-gray background (not completely black)
         
         # Draw vertical lines
         for i in range(0, self.width + 1, self.blockSize):
-            pg.draw.line(screen, (255, 255, 255), (i, 0), (i, self.height), 1)
+            pg.draw.line(screen, (50, 50, 50), (i, 0), (i, self.height), 1)
         
         # Draw horizontal lines
         for i in range(0, self.height + 1, self.blockSize):
-            pg.draw.line(screen, (255, 255, 255), (0, i), (self.width, i), 1)
+            pg.draw.line(screen, (50, 50, 50), (0, i), (self.width, i), 1)
     
 
 class SpawnRoom:
@@ -320,9 +352,9 @@ while continue_game:
     grid.drawGrid(vindu)
     # Draw spawn room
     spawnRoom.drawRoom(vindu)
-    # Draw multiple walls
+    # Draw multiple walls with smart borders
     for single_wall in wall:
-        single_wall.draw_wall(vindu)
+        single_wall.draw_wall(vindu, wall)
 
     # Draw Pacman on top of grid
     pacman.draw(vindu)
