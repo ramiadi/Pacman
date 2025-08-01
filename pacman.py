@@ -75,18 +75,22 @@ class Wall:
         self.width = width
         self.color = (20, 20, 40)  # Classic Pacman blue
     
-    def draw_wall(self, screen, all_walls=None):
-        # Draw classic blue wall
+    def draw_wall(self, screen, all_walls=None, rainbow_color=None):
+        # Always use the original wall color for the fill
         pg.draw.rect(screen, self.color, (self.x, self.y, self.width, self.height))
         
         if all_walls is not None:
-            # Smart border drawing - only draw borders where there's no adjacent wall
-            self.draw_smart_borders(screen, all_walls)
+            # Smart border drawing - use rainbow color for borders only
+            self.draw_smart_borders(screen, all_walls, rainbow_color)
         else:
-            # Fallback: draw full border
-            pg.draw.rect(screen, (255, 0, 0), (self.x, self.y, self.width, self.height), 2)
+            # Fallback: draw full border with rainbow color
+            border_color = rainbow_color if rainbow_color else (255, 0, 0)
+            pg.draw.rect(screen, border_color, (self.x, self.y, self.width, self.height), 2)
     
-    def draw_smart_borders(self, screen, all_walls):
+    def draw_smart_borders(self, screen, all_walls, rainbow_color=None):
+        # Use rainbow color for borders if provided, otherwise use red
+        border_color = rainbow_color if rainbow_color else (255, 0, 0)
+        
         # Check for adjacent walls
         has_left = self.has_adjacent_wall(all_walls, self.x - self.width, self.y)
         has_right = self.has_adjacent_wall(all_walls, self.x + self.width, self.y)
@@ -95,13 +99,13 @@ class Wall:
         
         # Draw borders only where there's no adjacent wall
         if not has_left:  # Left border
-            pg.draw.line(screen, (255, 0, 0), (self.x, self.y), (self.x, self.y + self.height), 2)
+            pg.draw.line(screen, border_color, (self.x, self.y), (self.x, self.y + self.height), 2)
         if not has_right:  # Right border
-            pg.draw.line(screen, (255, 0, 0), (self.x + self.width, self.y), (self.x + self.width, self.y + self.height), 2)
+            pg.draw.line(screen, border_color, (self.x + self.width, self.y), (self.x + self.width, self.y + self.height), 2)
         if not has_top:  # Top border
-            pg.draw.line(screen, (255, 0, 0), (self.x, self.y), (self.x + self.width, self.y), 2)
+            pg.draw.line(screen, border_color, (self.x, self.y), (self.x + self.width, self.y), 2)
         if not has_bottom:  # Bottom border
-            pg.draw.line(screen, (255, 0, 0), (self.x, self.y + self.height), (self.x + self.width, self.y + self.height), 2)
+            pg.draw.line(screen, border_color, (self.x, self.y + self.height), (self.x + self.width, self.y + self.height), 2)
     
     def has_adjacent_wall(self, all_walls, check_x, check_y):
         # Check if there's a wall at the specified position
@@ -232,10 +236,25 @@ class Grid:
         self.height = height
         self.width = width
         self.blockSize = blockSize
+        # Animation counter for rainbow cycling
+        self.animation_counter = 0
+    
+    def get_rainbow_color(self):
+        # Calculate hue for rainbow effect (0-360 degrees)
+        # Divide by 60 to make it cycle every 1 second (at 60 FPS)
+        hue = (self.animation_counter // 60) % 360
+        
+        # Create color using HSV (Hue, Saturation, Value)
+        color = pg.Color(0)
+        color.hsva = (hue, 100, 80, 100)  # Full saturation, 80% brightness
+        return (color.r, color.g, color.b)
+    
+    def update_animation(self):
+        # Increment animation counter each frame
+        self.animation_counter += 1
     
     def drawGrid(self, screen):
-        # Set the background color to dark blue-gray like classic Pacman
-        screen.fill((20, 20, 40))  # Dark blue-gray background (not completely black)
+        screen.fill((20, 20, 40))  # Dark blue-gray background
         
         # Draw vertical lines
         for i in range(0, self.width + 1, self.blockSize):
@@ -325,6 +344,13 @@ wall.extend(l_test)
 continue_game = True
 while continue_game:
     clock.tick()
+    
+    # Update animation counter in Grid class
+    grid.update_animation()
+    
+    # Calculate current rainbow color from Grid class
+    current_rainbow_color = grid.get_rainbow_color()
+    
     for event in pg.event.get():
         if event.type == pg.QUIT:
             continue_game = False
@@ -352,9 +378,9 @@ while continue_game:
     grid.drawGrid(vindu)
     # Draw spawn room
     spawnRoom.drawRoom(vindu)
-    # Draw multiple walls with smart borders
+    # Draw multiple walls with rainbow colors and smart borders
     for single_wall in wall:
-        single_wall.draw_wall(vindu, wall)
+        single_wall.draw_wall(vindu, wall, current_rainbow_color)
 
     # Draw Pacman on top of grid
     pacman.draw(vindu)
