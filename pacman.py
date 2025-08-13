@@ -23,7 +23,12 @@ class Pacman:
         self.key_left = key_left
         self.key_right = key_right
         self.load_image()
-    
+
+        self.target_x = x
+        self.target_y = y
+        self.is_moving = False
+        self.movement_speed = 1
+
     def load_image(self):
         #Load the pac man image
         try:
@@ -38,29 +43,78 @@ class Pacman:
     def draw(self, screen):
         screen.blit(self.image, (self.x, self.y))
 
-    def movePacman(self, button):
-        #Move the player using direction
-        speed = 1  # Movement speed
+    def movePacman(self, button, grid_blockSize, wall_list):
+        
+        if self.is_moving:
+            # Calculate remaining distance to target
+            distance_x = self.target_x - self.x
+            distance_y = self.target_y - self.y
 
-        if button[self.key_up]:
-            self.y -= speed
-        elif button[self.key_down]:
-            self.y += speed
-        elif button[self.key_left]:
-            self.x -= speed
-        elif button[self.key_right]:
-            self.x += speed
+            # === X-AXIS MOVEMENT ===
+            if abs(distance_x) > self.movement_speed:
+                # Far from target - move at full speed
+                if distance_x > 0:
+                    self.x += self.movement_speed  # Move right
+                else:
+                    self.x -= self.movement_speed  # Move left
+            elif distance_x != 0:
+                # Close to target - snap to exact position
+                self.x = self.target_x
+            
+            # === Y-AXIS MOVEMENT ===
+            if abs(distance_y) > self.movement_speed:
+                # Far from target - move at full speed
+                if distance_y > 0:
+                    self.y += self.movement_speed  # Move down
+                else:
+                    self.y -= self.movement_speed  # Move up
+            elif distance_y != 0:
+                # Close to target - snap to exact position
+                self.y = self.target_y
+
+            # Check if movement is complete
+            if self.x == self.target_x and self.y == self.target_y:
+                self.is_moving = False    
+
+        else:
+            # === INPUT HANDLING ===
+            new_target_x = self.x
+            new_target_y = self.y
+
+            # Check for directional input
+            if button[self.key_up]:
+                new_target_y -= grid_blockSize
+            elif button[self.key_down]:
+                new_target_y += grid_blockSize
+            elif button[self.key_left]:
+                 new_target_x -= grid_blockSize
+            elif button[self.key_right]:
+                new_target_x += grid_blockSize
+
+            # Only start movement if targets actually changed
+            if new_target_x != self.x or new_target_y != self.y:
+                has_wall = False
+                for wall in wall_list:
+                    if wall.x == new_target_x and wall.y == new_target_y:
+                        has_wall = True
+                        break
+                if not has_wall:
+                    self.target_x = new_target_x
+                    self.target_y = new_target_y
+                    self.is_moving = True
 
     def check_teleportation(self, window_height, window_width, gap_y, grid_blockSize):
         # Check if Pacman is in the gap area first
         if abs(self.y - gap_y) < grid_blockSize:
             # Check if Pacman completely left the left side (including its width)
-            if self.x + self.length < 0:
+            if self.x + self.length <= 0:
                 self.x = window_width - grid_blockSize
+                self.target_x = window_width - grid_blockSize
                 return True
             # Check if Pacman completely left the right side
-            elif self.x > window_width:
+            elif self.x >= window_width:
                 self.x = 0
+                self.target_x = 0
                 return True
         
         return False
@@ -347,7 +401,7 @@ pg.display.set_caption("Pacman Game")
 # Create Grid
 grid = Grid(0, 0, VINDU_HOYDE, VINDU_BREDDE, 40)
 # Create Pacman
-pacman = Pacman(400, 300, grid.blockSize, grid.blockSize, K_UP, K_DOWN, K_LEFT, K_RIGHT)
+pacman = Pacman(400, 320, grid.blockSize, grid.blockSize, K_UP, K_DOWN, K_LEFT, K_RIGHT)
 # Create spawn room (grid-aligned)
 spawnRoom = SpawnRoom(grid.blockSize * 5, grid.blockSize * 5, grid.blockSize * 4, grid.blockSize * 5)
 # Create food
@@ -400,20 +454,9 @@ while continue_game:
         if event.type == pg.QUIT:
             continue_game = False
 
-    # Store old position BEFORE moving
-    old_x = pacman.x
-    old_y = pacman.y
-
     # check if a button is pressed and move
     button_pressed = pg.key.get_pressed()
-    pacman.movePacman(button_pressed)
-
-    # Check collision AFTER moving
-    for single_wall in wall:
-        if single_wall.check_wall_collision(pacman):
-            pacman.x = old_x
-            pacman.y = old_y
-            break
+    pacman.movePacman(button_pressed, grid.blockSize, wall)
 
     # Check food collision and remove eaten food
     foods_to_remove = []
