@@ -30,7 +30,7 @@ class Pacman:
             self.image = pg.image.load(join("pictures/Pacman.png")).convert_alpha()
             self.image = pg.transform.scale(self.image, (self.length, self.width))
         except pg.error:
-            # for a reason if the picture fail tp load, make a yellow circle
+            # for a reason if the picture fail to load, make a yellow circle
             self.image = pg.Surface((self.length, self.width), pg.SRCALPHA)
             pg.draw.circle(self.image, (255, 255, 0), (self.length//2, self.width//2), self.length//2)
     
@@ -41,7 +41,7 @@ class Pacman:
     def movePacman(self, button):
         #Move the player using direction
         speed = 1  # Movement speed
-        
+
         if button[self.key_up]:
             self.y -= speed
         elif button[self.key_down]:
