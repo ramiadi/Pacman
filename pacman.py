@@ -5,7 +5,6 @@ from os.path import join
 # Initialize the game
 pg.init()
 
-# 
 VINDU_BREDDE = 1000
 VINDU_HOYDE = 600
 vindu = pg.display.set_mode([VINDU_BREDDE, VINDU_HOYDE])
@@ -299,6 +298,48 @@ class SpawnRoom:
         
         return walls
 
+class Food:
+    def __init__(self, x, y, length, width):
+        self.x = x
+        self.y = y
+        self.length = length
+        self.width = width
+    
+    def draw(self, screen, grid_blockSize):
+        pg.draw.circle(screen, (219, 219, 107), (self.x + self.length // 2, self.y + self.width // 2), grid_blockSize // 8)
+
+    def create_food_everywhere(self, window_height, window_width, grid_blockSize, wall_list, spawn_room):
+        foods = []
+
+        for x in range(0, window_width, grid_blockSize):
+            for y in range(0, window_height, grid_blockSize):
+                has_wall = False
+                in_spawn_room = False
+                
+                # Check if there's a wall at this position
+                for wall in wall_list:
+                    if wall.x == x and wall.y == y:
+                        has_wall = True
+                        break
+                
+                # Check if this position is inside the spawn room area
+                if (spawn_room.x <= x < spawn_room.x + spawn_room.width and 
+                    spawn_room.y <= y < spawn_room.y + spawn_room.height):
+                    in_spawn_room = True
+                
+                # Only create food if there's no wall AND not in spawn room
+                if not has_wall and not in_spawn_room:
+                    food = Food(x, y, grid_blockSize, grid_blockSize)
+                    foods.append(food)
+        
+        return foods
+    
+    def check_pacman_collision(self, pacman):
+        # Create smaller collision rectangles for more precise collision
+        food_rect = pg.Rect(self.x + self.length//4, self.y + self.width//4, self.length//2, self.width//2)
+        pacman_rect = pg.Rect(pacman.x , pacman.y , pacman.length, pacman.width)
+        return food_rect.colliderect(pacman_rect)
+
 
 
 # display title
@@ -309,6 +350,9 @@ grid = Grid(0, 0, VINDU_HOYDE, VINDU_BREDDE, 40)
 pacman = Pacman(400, 300, grid.blockSize, grid.blockSize, K_UP, K_DOWN, K_LEFT, K_RIGHT)
 # Create spawn room (grid-aligned)
 spawnRoom = SpawnRoom(grid.blockSize * 5, grid.blockSize * 5, grid.blockSize * 4, grid.blockSize * 5)
+# Create food
+food = Food(40, 50, 200, 200)
+
 
 # Create border walls using the Wall class method
 wall_generator = Wall(0, 0, 0, 0)  # Temporary instance
@@ -326,9 +370,6 @@ test_corridor = wall_generator.create_corridor(
     direction='vertical', 
     grid_blockSize=grid.blockSize
 )
-
-
-
 wall.extend(test_corridor)
 
 l_test = wall_generator.create_l_corridor(
@@ -340,6 +381,10 @@ l_test = wall_generator.create_l_corridor(
     opening_direction= 'left_up'
 )
 wall.extend(l_test)
+
+# Create all food pellets everywhere (after all walls are created)
+food_generator = Food(0, 0, 0, 0)  # Temporary instance for generation
+all_foods = food_generator.create_food_everywhere(VINDU_HOYDE, VINDU_BREDDE, grid.blockSize, wall, spawnRoom)
 
 continue_game = True
 while continue_game:
@@ -370,6 +415,16 @@ while continue_game:
             pacman.y = old_y
             break
 
+    # Check food collision and remove eaten food
+    foods_to_remove = []
+    for single_food in all_foods:
+        if single_food.check_pacman_collision(pacman):
+            foods_to_remove.append(single_food)
+    
+    # Remove eaten food from the list
+    for food_to_remove in foods_to_remove:
+        all_foods.remove(food_to_remove)
+
     # Check for teleportation (calculate gap_y same way as in border_wall method)
     gap_y = (VINDU_HOYDE // 2 // grid.blockSize) * grid.blockSize
     pacman.check_teleportation(VINDU_HOYDE, VINDU_BREDDE, gap_y, grid.blockSize)
@@ -381,6 +436,10 @@ while continue_game:
     # Draw multiple walls with rainbow colors and smart borders
     for single_wall in wall:
         single_wall.draw_wall(vindu, wall, current_rainbow_color)
+
+    # Draw all food pellets
+    for single_food in all_foods:
+        single_food.draw(vindu, grid.blockSize)
 
     # Draw Pacman on top of grid
     pacman.draw(vindu)
