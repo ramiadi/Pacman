@@ -416,21 +416,29 @@ wall = wall_generator.border_wall(VINDU_BREDDE, VINDU_HOYDE, grid.blockSize)
 spawn_walls = spawnRoom.create_spawn_walls(grid.blockSize)
 wall.extend(spawn_walls)
 
-# You already have a wall_generator instance
-test_corridor = wall_generator.create_corridor(
-    start_x=grid.blockSize * 15, 
-    start_y=grid.blockSize * 8, 
-    length=grid.blockSize * 6, 
-    direction='vertical', 
+wall_gap_corridor_right = wall_generator.create_corridor(
+    start_x=grid.blockSize * 23,
+    start_y= grid.blockSize * 7,
+    length=grid.blockSize * 1,
+    direction='horizontal',
     grid_blockSize=grid.blockSize
 )
-wall.extend(test_corridor)
+wall.extend(wall_gap_corridor_right)
+
+wall_gap_corridor_left = wall_generator.create_corridor(
+    start_x=grid.blockSize * 1,
+    start_y= grid.blockSize * 7,
+    length=grid.blockSize * 1,
+    direction='horizontal',
+    grid_blockSize=grid.blockSize
+)
+wall.extend(wall_gap_corridor_left)
 
 l_test = wall_generator.create_l_corridor(
-    corner_x=grid.blockSize * 20,
-    corner_y=grid.blockSize * 5, 
-    h_length=grid.blockSize * 3,
-    v_length=grid.blockSize * 3,
+    corner_x=grid.blockSize * 2,
+    corner_y=grid.blockSize * 9, 
+    h_length=grid.blockSize * 1,
+    v_length=grid.blockSize * 2,
     grid_blockSize=grid.blockSize,
     opening_direction= 'left_up'
 )
