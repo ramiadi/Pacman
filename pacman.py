@@ -194,7 +194,6 @@ class Enemy(pg.sprite.Sprite):
         if available_directions:
             chosen_direction = random.choice(available_directions)
             return chosen_direction[0], chosen_direction[1], chosen_direction[2]
-    
         # If completely surrounded, return None to indicate no valid move
         return None, self.x, self.y
 
