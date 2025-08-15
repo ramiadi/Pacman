@@ -134,7 +134,7 @@ class Enemy(pg.sprite.Sprite):
         self.target_x = x
         self.target_y = y
         self.is_moving = False
-        self.movement_speed = 1
+        self.movement_speed = 0.8
         self.directions = ["up", "down", "left", "right"]
         self.current_direction = random.choice(self.directions)
 
@@ -166,6 +166,10 @@ class Enemy(pg.sprite.Sprite):
 
     def has_wall_at(self, x, y, wall_list):
         """Check if there's a wall at the given position"""
+        # Check if position is out of bounds (treat as wall)
+        if x < 0 or y < 0 or x >= 1000 or y >= 600:
+            return True
+            
         for wall in wall_list:
             if wall.x == x and wall.y == y:
                 return True
@@ -193,11 +197,8 @@ class Enemy(pg.sprite.Sprite):
             chosen_direction = random.choice(available_directions)
             return chosen_direction[0], chosen_direction[1], chosen_direction[2]
     
-        # If completely surrounded, force movement anyway (emergency escape)
-        # Pick a random direction and move, even if blocked
-        emergency_direction = random.choice(self.directions)
-        emergency_x, emergency_y = self.calculate_target(emergency_direction, grid_blockSize)
-        return emergency_direction, emergency_x, emergency_y
+        # If completely surrounded, return None to indicate no valid move
+        return None, self.x, self.y
 
     def moveEnemy(self, grid_blockSize, wall_list):
         if self.is_moving:
@@ -221,46 +222,29 @@ class Enemy(pg.sprite.Sprite):
                     self.y -= self.movement_speed
             elif distance_y != 0:
                 self.y = self.target_y
-            
-            if self.has_wall_at(self.target_x, self.target_y, wall_list):
-                self.is_moving = False
 
             # Check if movement is complete
             if self.x == self.target_x and self.y == self.target_y:
                 self.is_moving = False
         else:
-            # Find a valid direction and move (simplified!)
+            # Find a valid direction and move
             valid_direction, target_x, target_y = self.find_valid_direction(grid_blockSize, wall_list)
             
-            # Always move - find_valid_direction guarantees a direction
-            self.current_direction = valid_direction
-            self.target_x = target_x
-            self.target_y = target_y
-            self.is_moving = True
+            # Only move if we found a valid direction
+            if valid_direction is not None:
+                self.current_direction = valid_direction
+                self.target_x = target_x
+                self.target_y = target_y
+                self.is_moving = True
+            # If no valid direction found, stay put and try a different direction next frame
+            else:
+                self.current_direction = random.choice(self.directions)
+    
+    def check_collision_pacman_enemy(self, pacman):
+        enemy_rect = pg.Rect(self.x + self.length // 4, self.y + self.width // 4, self.length // 2, self.width // 2)
+        pacman_rect = pg.Rect(pacman.x + pacman.length // 4, pacman.y + pacman.width // 4, pacman.length // 2, pacman.width // 2)
+        return enemy_rect.colliderect(pacman_rect)
 
-    # Keep enemies inside play area
-    def keep_enemy_in_bounds(self, window_width, window_height, grid_blockSize):    
-        if self.x < grid_blockSize:  # Keep away from left border wall
-            self.x = grid_blockSize
-            self.target_x = grid_blockSize
-            self.is_moving = False
-            self.current_direction = random.choice(self.directions)
-        elif self.x >= window_width - grid_blockSize * 2:  # Keep away from right border wall
-            self.x = window_width - grid_blockSize * 2
-            self.target_x = window_width - grid_blockSize * 2
-            self.is_moving = False
-            self.current_direction = random.choice(self.directions)
-        
-        if self.y < grid_blockSize:  # Keep away from top border wall
-            self.y = grid_blockSize
-            self.target_y = grid_blockSize
-            self.is_moving = False
-            self.current_direction = random.choice(self.directions)
-        elif self.y >= window_height - grid_blockSize * 2:  # Keep away from bottom border wall
-            self.y = window_height - grid_blockSize * 2
-            self.target_y = window_height - grid_blockSize * 2
-            self.is_moving = False
-            self.current_direction = random.choice(self.directions)
 
 class Wall:
     def __init__(self, x, y, height, width):
@@ -626,15 +610,14 @@ while continue_game:
     for food_to_remove in foods_to_remove:
         all_foods.remove(food_to_remove)
 
+    enemies = [red_ghost, green_ghost, blue_ghost, orange_ghost]
+    for enemy in enemies:
+        if enemy.check_collision_pacman_enemy(pacman):
+            continue_game = False
+
     # Check for teleportation (calculate gap_y same way as in border_wall method)
     gap_y = (VINDU_HOYDE // 2 // grid.blockSize) * grid.blockSize
     pacman.check_teleportation(VINDU_HOYDE, VINDU_BREDDE, gap_y, grid.blockSize)
-
-    # Make sure the enemies doesnt leave the map
-    red_ghost.keep_enemy_in_bounds(VINDU_BREDDE, VINDU_HOYDE, grid.blockSize)
-    green_ghost.keep_enemy_in_bounds(VINDU_BREDDE, VINDU_HOYDE, grid.blockSize)
-    blue_ghost.keep_enemy_in_bounds(VINDU_BREDDE, VINDU_HOYDE, grid.blockSize)
-    orange_ghost.keep_enemy_in_bounds(VINDU_BREDDE, VINDU_HOYDE, grid.blockSize)
 
 
     # Draw grid first (background)
