@@ -165,8 +165,7 @@ class Enemy(pg.sprite.Sprite):
         return new_target_x, new_target_y
 
     def has_wall_at(self, x, y, wall_list):
-        """Check if there's a wall at the given position"""
-        # Check if position is out of bounds (treat as wall)
+        # Check if position is out of bounds
         if x < 0 or y < 0 or x >= 1000 or y >= 600:
             return True
             
@@ -176,7 +175,6 @@ class Enemy(pg.sprite.Sprite):
         return False
 
     def find_valid_direction(self, grid_blockSize, wall_list):
-        """Find a valid direction that doesn't hit a wall"""
         # Try current direction first
         new_target_x, new_target_y = self.calculate_target(self.current_direction, grid_blockSize)
   
