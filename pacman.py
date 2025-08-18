@@ -35,12 +35,12 @@ class Pacman:
         try:
             self.image = pg.image.load(join("pictures/Pacman.png")).convert_alpha()
             self.image = pg.transform.scale(self.image, (self.length, self.width))
-        except pg.error:
+        except Exception as e:
             # for a reason if the picture fail to load, make a yellow circle
+            print(f"Pac man image loading failed: {e}")
             self.image = pg.Surface((self.length, self.width), pg.SRCALPHA)
             pg.draw.circle(self.image, (255, 255, 0), (self.length//2, self.width//2), self.length//2)
-    
-    
+
     def draw(self, screen):
         screen.blit(self.image, (self.x, self.y))
 
@@ -530,10 +530,11 @@ class PowerPellet:
         try:
             self.image = pg.image.load(join("pictures/food-icon.png")).convert_alpha()
             self.image = pg.transform.scale(self.image, (self.length, self.width))
-        except pg.error:
-            # for a reason if the picture fail to load, make a yellow circle
+        except Exception as e:  # Catch ANY exception
+            print(f"PowerPellet image loading failed: {e}")
+            # Create white circle fallback
             self.image = pg.Surface((self.length, self.width), pg.SRCALPHA)
-            pg.draw.circle(self.image, (255, 255, 0), (self.length//2, self.width//2), self.length//2)
+            pg.draw.circle(self.image, (255, 255, 255), (self.length//2, self.width//2), self.length//4)
     
     def draw(self, screen):
         screen.blit(self.image, (self.x, self.y))
@@ -550,7 +551,14 @@ class PowerPellet:
             powerPellet = PowerPellet(pos_x, pos_y, grid_blockSize, grid_blockSize)
             powerPellet_list.append(powerPellet)
         return powerPellet_list
-
+      
+    def check_overlap_between_powerPellets_and_food_to_remove(self, power_pellets, foods):
+        food_to_remove = []
+        for power_pellet in power_pellets:
+            for food in foods:
+                if power_pellet.x == food.x and power_pellet.y == food.y:
+                    food_to_remove.append(food)
+        return food_to_remove
 
 
 # display title
@@ -621,6 +629,13 @@ power_pellet_positions = [
 powerPellet_generator = PowerPellet(0,0,0,0)
 all_power_pellets = powerPellet_generator.make_multiple_power_pellets(power_pellet_positions, grid.blockSize)
 
+# After creating all_food and all_power_pellets
+overlapping_food = powerPellet_generator.check_overlap_between_powerPellets_and_food_to_remove(all_power_pellets, all_foods)
+
+# Remove overlapping food AFTER creating both food and power pellets
+for food_to_remove in overlapping_food:
+    all_foods.remove(food_to_remove)
+
 continue_game = True
 while continue_game:
     clock.tick()
@@ -655,14 +670,14 @@ while continue_game:
 
     # Check power pellet collision and remove eaten food
     powerPellets_to_remove = []
-    for single_powerPellet in all_power_pellets:
-        if single_powerPellet.check_pacman_collision(pacman):
-            powerPellets_to_remove.append(single_powerPellet)    
+    for single_pellet in all_power_pellets:
+        if single_pellet.check_pacman_collision(pacman):
+            powerPellets_to_remove.append(single_pellet)    
 
     #Remove eaten power pellet from the list
     for powerPellet_to_remove in powerPellets_to_remove:
         all_power_pellets.remove(powerPellet_to_remove)
-    
+
     # End the game if the pacman touches one of the ghost
     enemies = [red_ghost, green_ghost, blue_ghost, orange_ghost]
     for enemy in enemies:
