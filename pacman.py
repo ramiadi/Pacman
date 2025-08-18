@@ -508,7 +508,6 @@ class Food:
                 if not has_wall and not in_spawn_room:
                     food = Food(x, y, grid_blockSize, grid_blockSize)
                     foods.append(food)
-        
         return foods
     
     def check_pacman_collision(self, pacman):
@@ -654,7 +653,17 @@ while continue_game:
     for food_to_remove in foods_to_remove:
         all_foods.remove(food_to_remove)
 
+    # Check power pellet collision and remove eaten food
+    powerPellets_to_remove = []
+    for single_powerPellet in all_power_pellets:
+        if single_powerPellet.check_pacman_collision(pacman):
+            powerPellets_to_remove.append(single_powerPellet)    
 
+    #Remove eaten power pellet from the list
+    for powerPellet_to_remove in powerPellets_to_remove:
+        all_power_pellets.remove(powerPellet_to_remove)
+    
+    # End the game if the pacman touches one of the ghost
     enemies = [red_ghost, green_ghost, blue_ghost, orange_ghost]
     for enemy in enemies:
         if enemy.check_collision_pacman_enemy(pacman):
