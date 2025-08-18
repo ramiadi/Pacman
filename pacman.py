@@ -508,7 +508,6 @@ class Food:
                 if not has_wall and not in_spawn_room:
                     food = Food(x, y, grid_blockSize, grid_blockSize)
                     foods.append(food)
-        
         return foods
     
     def check_pacman_collision(self, pacman):
@@ -516,6 +515,41 @@ class Food:
         food_rect = pg.Rect(self.x + self.length//4, self.y + self.width//4, self.length//2, self.width//2)
         pacman_rect = pg.Rect(pacman.x , pacman.y , pacman.length, pacman.width)
         return food_rect.colliderect(pacman_rect)
+
+
+class PowerPellet:
+    def __init__(self, x, y, length, width):
+        self.x = x
+        self.y = y 
+        self.length = length
+        self.width = width
+        self.load_image()
+
+    def load_image(self):
+        #Load the pac man image
+        try:
+            self.image = pg.image.load(join("pictures/food-icon.png")).convert_alpha()
+            self.image = pg.transform.scale(self.image, (self.length, self.width))
+        except pg.error:
+            # for a reason if the picture fail to load, make a yellow circle
+            self.image = pg.Surface((self.length, self.width), pg.SRCALPHA)
+            pg.draw.circle(self.image, (255, 255, 0), (self.length//2, self.width//2), self.length//2)
+    
+    def draw(self, screen):
+        screen.blit(self.image, (self.x, self.y))
+
+    def check_pacman_collision(self, pacman):
+        # Create smaller collision rectangles for more precise collision
+        power_rect = pg.Rect(self.x + self.length//4, self.y + self.width//4, self.length//2, self.width//2)
+        pacman_rect = pg.Rect(pacman.x , pacman.y , pacman.length, pacman.width)
+        return power_rect.colliderect(pacman_rect)
+
+    def make_multiple_power_pellets(self, positions, grid_blockSize):
+        powerPellet_list = []
+        for pos_x, pos_y in positions:
+            powerPellet = PowerPellet(pos_x, pos_y, grid_blockSize, grid_blockSize)
+            powerPellet_list.append(powerPellet)
+        return powerPellet_list
 
 
 
@@ -575,6 +609,18 @@ wall.extend(l_test)
 food_generator = Food(0, 0, 0, 0)  # Temporary instance for generation
 all_foods = food_generator.create_food_everywhere(VINDU_HOYDE, VINDU_BREDDE, grid.blockSize, wall, spawnRoom)
 
+# Create power pellets. 6 fixed positions
+power_pellet_positions = [
+    (80, 80),
+    (880, 80),
+    (80, 480),
+    (880, 480),
+    (80, 280),
+    (880, 280)
+]
+powerPellet_generator = PowerPellet(0,0,0,0)
+all_power_pellets = powerPellet_generator.make_multiple_power_pellets(power_pellet_positions, grid.blockSize)
+
 continue_game = True
 while continue_game:
     clock.tick()
@@ -607,6 +653,17 @@ while continue_game:
     for food_to_remove in foods_to_remove:
         all_foods.remove(food_to_remove)
 
+    # Check power pellet collision and remove eaten food
+    powerPellets_to_remove = []
+    for single_powerPellet in all_power_pellets:
+        if single_powerPellet.check_pacman_collision(pacman):
+            powerPellets_to_remove.append(single_powerPellet)    
+
+    #Remove eaten power pellet from the list
+    for powerPellet_to_remove in powerPellets_to_remove:
+        all_power_pellets.remove(powerPellet_to_remove)
+    
+    # End the game if the pacman touches one of the ghost
     enemies = [red_ghost, green_ghost, blue_ghost, orange_ghost]
     for enemy in enemies:
         if enemy.check_collision_pacman_enemy(pacman):
@@ -628,6 +685,10 @@ while continue_game:
     # Draw all food pellets
     for single_food in all_foods:
         single_food.draw(vindu, grid.blockSize)
+
+   # Draw Multiple power pellets
+    for single_power_pellet in all_power_pellets:
+        single_power_pellet.draw(vindu)
 
     # Draw Pacman on top of grid
     pacman.draw(vindu)
