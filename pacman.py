@@ -551,7 +551,7 @@ class PowerPellet:
             powerPellet = PowerPellet(pos_x, pos_y, grid_blockSize, grid_blockSize)
             powerPellet_list.append(powerPellet)
         return powerPellet_list
-      
+    
     def check_overlap_between_powerPellets_and_food_to_remove(self, power_pellets, foods):
         food_to_remove = []
         for power_pellet in power_pellets:
