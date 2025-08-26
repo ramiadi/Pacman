@@ -28,7 +28,9 @@ class Pacman:
         self.target_x = x
         self.target_y = y
         self.is_moving = False
-        self.movement_speed = 1
+        self.movement_speed = 5
+        self.power_mode_active = False
+        self.power_mode_timer = 0
 
     def load_image(self):
         #Load the pac man image
@@ -119,9 +121,13 @@ class Pacman:
                 return True
         
         return False
+    
+    def activate_power_mode(self, duration):
+        self.power_mode_active = True
+        self.power_mode_timer = duration
 
 class Enemy(pg.sprite.Sprite):
-    def __init__(self, x, y, length, width, image_path, fallback_color):
+    def __init__(self, x, y, length, width, image_path, fallback_color, weak_image_path=None):
         super().__init__()
         self.x = x
         self.y = y
@@ -129,25 +135,30 @@ class Enemy(pg.sprite.Sprite):
         self.width = width
         self.image_path = image_path
         self.fallback_color = fallback_color
-        self.load_enemy_image()
-
+        self.weak_image_path = weak_image_path if weak_image_path else "pictures/eaten_ghost.png"
+        # Load both images at init
+        self.normal_image = self.load_enemy_image(self.image_path, self.fallback_color)
+        self.weak_image = self.load_enemy_image(self.weak_image_path, (0, 0, 139))
         self.target_x = x
         self.target_y = y
         self.is_moving = False
-        self.movement_speed = 0.8
+        self.movement_speed = 4
         self.directions = ["up", "down", "left", "right"]
         self.current_direction = random.choice(self.directions)
 
-    def load_enemy_image(self):
+    def load_enemy_image(self, path, color):
         try:
-            self.image = pg.image.load(join(self.image_path)).convert_alpha()
-            self.image = pg.transform.scale(self.image, (self.length, self.width))
-        except pg.error:
-            self.image = pg.Surface((self.length, self.width), pg.SRCALPHA)
-            pg.draw.circle(self.image, (self.fallback_color), (self.length // 2, self.width // 2), self.length // 2)
+            image = pg.image.load(join(path)).convert_alpha()
+            image = pg.transform.scale(image, (self.length, self.width))
+        except Exception as e:
+            print(f"Enemy image loading failed ({path}): {e}")
+            image = pg.Surface((self.length, self.width), pg.SRCALPHA)
+            pg.draw.circle(image, color, (self.length // 2, self.width // 2), self.length // 2)
+        return image
 
-    def draw_enemy(self, screen):
-        screen.blit(self.image, (self.x, self.y))
+    def draw_enemy(self, screen, is_weak):
+        img = self.weak_image if is_weak else self.normal_image
+        screen.blit(img, (self.x, self.y))
 
     def calculate_target(self, direction, grid_blockSize):
         new_target_x = self.x
@@ -241,7 +252,7 @@ class Enemy(pg.sprite.Sprite):
         enemy_rect = pg.Rect(self.x + self.length // 4, self.y + self.width // 4, self.length // 2, self.width // 2)
         pacman_rect = pg.Rect(pacman.x + pacman.length // 4, pacman.y + pacman.width // 4, pacman.length // 2, pacman.width // 2)
         return enemy_rect.colliderect(pacman_rect)
-
+    
 
 class Wall:
     def __init__(self, x, y, height, width):
@@ -551,7 +562,7 @@ class PowerPellet:
             powerPellet = PowerPellet(pos_x, pos_y, grid_blockSize, grid_blockSize)
             powerPellet_list.append(powerPellet)
         return powerPellet_list
-      
+    
     def check_overlap_between_powerPellets_and_food_to_remove(self, power_pellets, foods):
         food_to_remove = []
         for power_pellet in power_pellets:
@@ -571,12 +582,12 @@ pacman = Pacman(400, 320, grid.blockSize, grid.blockSize, K_UP, K_DOWN, K_LEFT, 
 spawnRoom = SpawnRoom(grid.blockSize * 5, grid.blockSize * 5, grid.blockSize * 4, grid.blockSize * 5)
 # Create food
 food = Food(40, 50, 200, 200)
-# Create Enemies
-red_ghost = Enemy(grid.blockSize * 10, grid.blockSize * 12 , grid.blockSize, grid.blockSize, "pictures/enemy_red.png", (255, 0, 0))
-green_ghost = Enemy(grid.blockSize * 5, grid.blockSize * 14 , grid.blockSize, grid.blockSize, "pictures/enemy_green.png", (255, 184, 255))
-blue_ghost = Enemy(grid.blockSize * 15 , grid.blockSize * 3, grid.blockSize, grid.blockSize, "pictures/enemy_blue.png",(0, 255, 255))
-orange_ghost = Enemy(grid.blockSize * 18, grid.blockSize * 7, grid.blockSize, grid.blockSize, "pictures/enemy_orange.png", (255, 184, 82))
-
+# Create Enemies (add weak_image_path argument)
+red_ghost = Enemy(grid.blockSize * 10, grid.blockSize * 12 , grid.blockSize, grid.blockSize, "pictures/enemy_red.png", (255, 0, 0), "pictures/eaten_ghost.png")
+green_ghost = Enemy(grid.blockSize * 5, grid.blockSize * 14 , grid.blockSize, grid.blockSize, "pictures/enemy_green.png", (255, 184, 255), "pictures/eaten_ghost.png")
+blue_ghost = Enemy(grid.blockSize * 15 , grid.blockSize * 3, grid.blockSize, grid.blockSize, "pictures/enemy_blue.png",(0, 255, 255), "pictures/eaten_ghost.png")
+orange_ghost = Enemy(grid.blockSize * 18, grid.blockSize * 7, grid.blockSize, grid.blockSize, "pictures/enemy_orange.png", (255, 184, 82), "pictures/eaten_ghost.png")
+enemies = [red_ghost, green_ghost, blue_ghost, orange_ghost]
 # Create border walls using the Wall class method
 wall_generator = Wall(0, 0, 0, 0)  # Temporary instance
 wall = wall_generator.border_wall(VINDU_BREDDE, VINDU_HOYDE, grid.blockSize)
@@ -638,7 +649,8 @@ for food_to_remove in overlapping_food:
 
 continue_game = True
 while continue_game:
-    clock.tick()
+    # The game runs in 60 fps
+    clock.tick(60)
     
     # Update animation counter in Grid class
     grid.update_animation()
@@ -672,14 +684,27 @@ while continue_game:
     powerPellets_to_remove = []
     for single_pellet in all_power_pellets:
         if single_pellet.check_pacman_collision(pacman):
-            powerPellets_to_remove.append(single_pellet)    
+            powerPellets_to_remove.append(single_pellet)  
+            # power mode is active and enemies goes slower 600 / 60 fps = 10 seconds slow
+            pacman.activate_power_mode(600)  
+            for enemy in enemies:
+                enemy.movement_speed = 2
+            # No need to set images here, handled in draw_enemy
 
     #Remove eaten power pellet from the list
     for powerPellet_to_remove in powerPellets_to_remove:
         all_power_pellets.remove(powerPellet_to_remove)
 
+    # Checks when the power mode is active and decreases the timer
+    if pacman.power_mode_active:
+        pacman.power_mode_timer -= 1
+        if pacman.power_mode_timer <= 0:
+            # When the timer runs out, the enemies go to normal speed
+            pacman.power_mode_active = False
+            for enemy in enemies:
+                enemy.movement_speed = 4
+
     # End the game if the pacman touches one of the ghost
-    enemies = [red_ghost, green_ghost, blue_ghost, orange_ghost]
     for enemy in enemies:
         if enemy.check_collision_pacman_enemy(pacman):
             continue_game = False
@@ -709,10 +734,8 @@ while continue_game:
     pacman.draw(vindu)
 
     # Draw Enemies
-    red_ghost.draw_enemy(vindu)
-    green_ghost.draw_enemy(vindu)
-    blue_ghost.draw_enemy(vindu)
-    orange_ghost.draw_enemy(vindu)
+    for enemy in enemies:
+        enemy.draw_enemy(vindu, pacman.power_mode_active)
     
     # Update everything here
     pg.display.flip() 
