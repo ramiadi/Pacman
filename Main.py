@@ -110,8 +110,8 @@ while continue_game:
     # check if a button is pressed and move
     button_pressed = pg.key.get_pressed()
     pacman.movePacman(button_pressed, grid.blockSize, wall)
+    red_ghost.chase_towards_pacman(pacman, grid, wall)
     red_ghost.moveEnemy(grid.blockSize,  wall)
-    red_ghost.chase_towards_pacman(pacman, grid.blockSize, wall)
     green_ghost.moveEnemy(grid.blockSize, wall)
     blue_ghost.moveEnemy(grid.blockSize, wall)
     orange_ghost.moveEnemy(grid.blockSize, wall)
