@@ -128,3 +128,29 @@ class Enemy(pg.sprite.Sprite):
         enemy_rect = pg.Rect(self.x + self.length // 4, self.y + self.width // 4, self.length // 2, self.width // 2)
         pacman_rect = pg.Rect(pacman.x + pacman.length // 4, pacman.y + pacman.width // 4, pacman.length // 2, pacman.width // 2)
         return enemy_rect.colliderect(pacman_rect)
+    
+    def chase_towards_pacman(self, pacman, grid_blockSize, wall_list):
+        ghost_grid_x = self.x // grid_blockSize
+        ghost_grid_y = self.y // grid_blockSize
+        pacman_grid_x = pacman.x // grid_blockSize
+        pacman_grid_y = pacman.y // grid_blockSize
+
+        if self.x % grid_blockSize == 0 and self.y % grid_blockSize == 0:
+            directions = []
+            if ghost_grid_x < pacman_grid_x:
+                directions.append("right")
+            elif ghost_grid_x > pacman_grid_x:
+                directions.append("left")
+            if ghost_grid_y < pacman_grid_y:
+                directions.append("down")
+            elif ghost_grid_y > pacman_grid_y:
+                directions.append("up")
+                
+            for direction in directions:
+                next_x, next_y = self.calculate_target(direction, grid_blockSize)
+                if not self.has_wall_at(next_x, next_y, wall_list):
+                    self.target_x = next_x
+                    self.target_y = next_y
+                    self.is_moving = True
+                    self.current_direction = direction
+                    return
