@@ -136,8 +136,8 @@ class Enemy(pg.sprite.Sprite):
     def chase_towards_pacman(self, pacman, grid, wall_list):
         # Get grid size (in cells)
         grid_blockSize = grid.blockSize
-        grid_width = grid.width // grid_blockSize  # Or use grid.width // grid.blockSize if you pass grid
-        grid_height = grid.height // grid_blockSize  # Or use grid.height // grid.blockSize if you pass grid
+        grid_width = grid.width // grid_blockSize  
+        grid_height = grid.height // grid_blockSize 
 
         # Only update path if enemy is perfectly aligned to the grid
         if not self.is_on_grid(grid_blockSize):
