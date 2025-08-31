@@ -1,5 +1,6 @@
 import pygame as pg
 import random
+import heapq
 from os.path import join
 
 class Enemy(pg.sprite.Sprite):
@@ -128,3 +129,69 @@ class Enemy(pg.sprite.Sprite):
         enemy_rect = pg.Rect(self.x + self.length // 4, self.y + self.width // 4, self.length // 2, self.width // 2)
         pacman_rect = pg.Rect(pacman.x + pacman.length // 4, pacman.y + pacman.width // 4, pacman.length // 2, pacman.width // 2)
         return enemy_rect.colliderect(pacman_rect)
+    
+    def is_on_grid(self, grid_blockSize):
+        return self.x % grid_blockSize == 0 and self.y % grid_blockSize == 0
+
+    def chase_towards_pacman(self, pacman, grid, wall_list):
+        # Get grid size (in cells)
+        grid_blockSize = grid.blockSize
+        grid_width = grid.width // grid_blockSize  # Or use grid.width // grid.blockSize if you pass grid
+        grid_height = grid.height // grid_blockSize  # Or use grid.height // grid.blockSize if you pass grid
+
+        # Only update path if enemy is perfectly aligned to the grid
+        if not self.is_on_grid(grid_blockSize):
+            return
+
+        ghost_grid = (self.x // grid_blockSize, self.y // grid_blockSize)
+        pacman_grid = (pacman.x // grid_blockSize, pacman.y // grid_blockSize)
+        if ghost_grid == pacman_grid:
+            return  # Already at Pacman
+
+        # Find path
+        path = self.a_star_pathfind(ghost_grid, pacman_grid, wall_list, grid_blockSize, grid_width, grid_height)
+        if path:
+            next_cell = path[0]  # First step
+            self.target_x = next_cell[0] * grid_blockSize
+            self.target_y = next_cell[1] * grid_blockSize
+            self.is_moving = True
+    
+    # Every line under, is almost a copy of this website: https://www.geeksforgeeks.org/dsa/a-search-algorithm/
+    @staticmethod
+    def manhattan(a, b):
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+    
+    def a_star_pathfind(self, start, goal, wall_list, grid_blockSize, grid_width, grid_height):
+        wall_cells = set((wall.x // grid_blockSize, wall.y // grid_blockSize) for wall in wall_list)
+        open_set = []
+        heapq.heappush(open_set, (0, start))
+        came_from = {}
+        g_score = {start: 0}
+        f_score = {start: self.manhattan(start, goal)}
+
+        while open_set:
+            _, current = heapq.heappop(open_set)
+            if current == goal:
+                path = []
+                while current in came_from:
+                    path.append(current)
+                    current = came_from[current]
+                path.reverse()
+                return path
+            
+            neighbors = []
+            
+            for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
+                nx, ny = current[0] + dx, current[1] + dy
+                if 0 <= nx < grid_width and 0 <= ny < grid_height:
+                    if (nx, ny) not in wall_cells:
+                        neighbors.append((nx, ny))
+
+            for neighbor in neighbors:
+                tentative_g = g_score[current] + 1
+                if neighbor not in g_score or tentative_g < g_score[neighbor]:
+                    came_from[neighbor] = current
+                    g_score[neighbor] = tentative_g
+                    f_score[neighbor] = tentative_g + self.manhattan(neighbor, goal)
+                    heapq.heappush(open_set, (f_score[neighbor], neighbor))
+        return []
