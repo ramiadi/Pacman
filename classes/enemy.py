@@ -22,6 +22,8 @@ class Enemy(pg.sprite.Sprite):
         self.movement_speed = 4
         self.directions = ["up", "down", "left", "right"]
         self.current_direction = random.choice(self.directions)
+        self.is_retreating = False
+        self.leaving_spawn = False
 
     def load_enemy_image(self, path, color):
         try:
@@ -61,6 +63,51 @@ class Enemy(pg.sprite.Sprite):
             if wall.x == x and wall.y == y:
                 return True
         return False
+    
+    def retreat_enemy_to_spawnRoom(self, spawn_x, spawn_y, grid, wall_list):
+        grid_blockSize = grid.blockSize
+        grid_width = grid.width // grid_blockSize
+        grid_height = grid.height // grid_blockSize
+
+        if not self.is_on_grid(grid_blockSize):
+            return
+    
+        ghost_grid = (self.x // grid_blockSize, self.y // grid_blockSize)
+        spawn_grid = (spawn_x // grid_blockSize, spawn_y // grid_blockSize)
+
+        if ghost_grid == spawn_grid:
+            self.is_retreating = False
+            self.leaving_spawn = True
+            return
+
+        path = self.a_star_pathfind(ghost_grid, spawn_grid, wall_list, grid_blockSize, grid_width, grid_height)
+        if path:
+            next_cell = path[0]
+            self.target_x = next_cell[0] * grid_blockSize
+            self.target_y = next_cell[1] * grid_blockSize
+            self.is_moving = True
+        
+    def leave_spawnroom(self, spawnroom, grid_blockSize, wall_list):
+        # Calculate the gap (door) position
+        gap_x = spawnroom.x + (spawnroom.width // 2 // grid_blockSize) * grid_blockSize
+        gap_y = spawnroom.y  # Assuming the gap is at the top wall
+
+        ghost_grid = (self.x // grid_blockSize, self.y // grid_blockSize)
+        gap_grid = (gap_x // grid_blockSize, gap_y // grid_blockSize)
+
+        if ghost_grid == gap_grid:
+            self.leaving_spawn = False  # Done leaving, resume normal movement
+            return
+
+        # Use pathfinding to move to the gap
+        grid_width = 1000 // grid_blockSize  # Use full grid for pathfinding
+        grid_height = 600 // grid_blockSize
+        path = self.a_star_pathfind(ghost_grid, gap_grid, wall_list, grid_blockSize, grid_width, grid_height)
+        if path:
+            next_cell = path[0]
+            self.target_x = next_cell[0] * grid_blockSize
+            self.target_y = next_cell[1] * grid_blockSize
+            self.is_moving = True
 
     def find_valid_direction(self, grid_blockSize, wall_list):
         # Try current direction first

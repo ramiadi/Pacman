@@ -25,6 +25,8 @@ grid = Grid(0, 0, VINDU_HOYDE, VINDU_BREDDE, 40)
 pacman = Pacman(400, 320, grid.blockSize, grid.blockSize, K_UP, K_DOWN, K_LEFT, K_RIGHT)
 # Create spawn room (grid-aligned)
 spawnRoom = SpawnRoom(grid.blockSize * 5, grid.blockSize * 5, grid.blockSize * 4, grid.blockSize * 5)
+spawn_target_x = spawnRoom.x + (spawnRoom.width // 2 // grid.blockSize) * grid.blockSize
+spawn_target_y = spawnRoom.y + (spawnRoom.height // 2 // grid.blockSize) * grid.blockSize
 # Create food
 food = Food(40, 50, 200, 200)
 # Create Enemies (add weak_image_path argument)
@@ -110,11 +112,15 @@ while continue_game:
     # check if a button is pressed and move
     button_pressed = pg.key.get_pressed()
     pacman.movePacman(button_pressed, grid.blockSize, wall)
-    red_ghost.chase_towards_pacman(pacman, grid, wall)
-    red_ghost.moveEnemy(grid.blockSize,  wall)
-    green_ghost.moveEnemy(grid.blockSize, wall)
-    blue_ghost.moveEnemy(grid.blockSize, wall)
-    orange_ghost.moveEnemy(grid.blockSize, wall)
+    for enemy in enemies:
+        if enemy.is_retreating:
+            enemy.retreat_enemy_to_spawnRoom(spawn_target_x, spawn_target_y, grid, wall)
+        elif enemy.leaving_spawn:
+            enemy.leave_spawnroom(spawnRoom, grid.blockSize, wall)
+        else:
+            if enemy == red_ghost:
+                enemy.chase_towards_pacman(pacman, grid, wall)
+        enemy.moveEnemy(grid.blockSize, wall)
 
     # Check food collision and remove eaten food
     foods_to_remove = []
@@ -153,7 +159,10 @@ while continue_game:
     # End the game if the pacman touches one of the ghost
     for enemy in enemies:
         if enemy.check_collision_pacman_enemy(pacman):
-            continue_game = False
+            if pacman.power_mode_active:
+                enemy.is_retreating = True
+            else:
+                continue_game = False
 
     # Check for teleportation (calculate gap_y same way as in border_wall method)
     gap_y = (VINDU_HOYDE // 2 // grid.blockSize) * grid.blockSize
@@ -183,6 +192,14 @@ while continue_game:
     for enemy in enemies:
         enemy.draw_enemy(vindu, pacman.power_mode_active)
     
+    # After drawing enemies, check if any normal ghost is stuck in spawn room and not already leaving
+    for enemy in enemies:
+        if not enemy.is_retreating and not enemy.leaving_spawn:
+            # Check if ghost is inside spawn room (excluding the gap/door)
+            if (spawnRoom.x <= enemy.x < spawnRoom.x + spawnRoom.width and
+                spawnRoom.y <= enemy.y < spawnRoom.y + spawnRoom.height):
+                enemy.leaving_spawn = True
+
     # Update everything here
     pg.display.flip() 
 
