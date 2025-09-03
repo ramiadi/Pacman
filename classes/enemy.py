@@ -100,8 +100,8 @@ class Enemy(pg.sprite.Sprite):
             return
 
         # Use pathfinding to move to the gap
-        grid_width = 1000 // grid_blockSize  # Use full grid for pathfinding
-        grid_height = 600 // grid_blockSize
+        grid_width = spawnroom.width // grid_blockSize
+        grid_height = spawnroom.height // grid_blockSize
         path = self.a_star_pathfind(ghost_grid, gap_grid, wall_list, grid_blockSize, grid_width, grid_height)
         if path:
             next_cell = path[0]
