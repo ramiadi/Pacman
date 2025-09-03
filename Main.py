@@ -115,6 +115,18 @@ while continue_game:
     for enemy in enemies:
         if enemy.is_retreating:
             enemy.retreat_enemy_to_spawnRoom(spawn_target_x, spawn_target_y, grid, wall)
+        elif enemy.leaving_spawn:
+            # Spawnroom gap at top center
+            spawn_gap_x = spawnRoom.x + (spawnRoom.width // 2 // grid.blockSize) * grid.blockSize
+            spawn_gap_y = spawnRoom.y  # Top edge
+            enemy.leave_spawn((spawn_gap_x, spawn_gap_y), grid, wall)
+            # If ghost reached the gap, smoothly move it outside
+            if enemy.x == spawn_gap_x and enemy.y == spawn_gap_y:
+                # Set next movement target to one block above the gap
+                enemy.target_x = spawn_gap_x
+                enemy.target_y = spawn_gap_y - grid.blockSize
+                enemy.is_moving = True
+                enemy.leaving_spawn = False
         else:
             if enemy == red_ghost:
                 enemy.chase_towards_pacman(pacman, grid, wall)

@@ -87,28 +87,6 @@ class Enemy(pg.sprite.Sprite):
             self.target_y = next_cell[1] * grid_blockSize
             self.is_moving = True
         
-    def leave_spawnroom(self, spawnroom, grid_blockSize, wall_list):
-        # Calculate the gap (door) position
-        gap_x = spawnroom.x + (spawnroom.width // 2 // grid_blockSize) * grid_blockSize
-        gap_y = spawnroom.y  # Assuming the gap is at the top wall
-
-        ghost_grid = (self.x // grid_blockSize, self.y // grid_blockSize)
-        gap_grid = (gap_x // grid_blockSize, gap_y // grid_blockSize)
-
-        if ghost_grid == gap_grid:
-            self.leaving_spawn = False  # Done leaving, resume normal movement
-            return
-
-        # Use pathfinding to move to the gap
-        grid_width = spawnroom.width // grid_blockSize
-        grid_height = spawnroom.height // grid_blockSize
-        path = self.a_star_pathfind(ghost_grid, gap_grid, wall_list, grid_blockSize, grid_width, grid_height)
-        if path:
-            next_cell = path[0]
-            self.target_x = next_cell[0] * grid_blockSize
-            self.target_y = next_cell[1] * grid_blockSize
-            self.is_moving = True
-
     def find_valid_direction(self, grid_blockSize, wall_list):
         # Try current direction first
         new_target_x, new_target_y = self.calculate_target(self.current_direction, grid_blockSize)
@@ -177,6 +155,28 @@ class Enemy(pg.sprite.Sprite):
         pacman_rect = pg.Rect(pacman.x + pacman.length // 4, pacman.y + pacman.width // 4, pacman.length // 2, pacman.width // 2)
         return enemy_rect.colliderect(pacman_rect)
     
+
+    def leave_spawn(self, spawn_gap_pos, grid, wall_list):
+        grid_blockSize = grid.blockSize
+        grid_width = grid.width // grid_blockSize
+        grid_height = grid.height // grid_blockSize
+
+        if not self.is_on_grid(grid_blockSize):
+            return
+
+        ghost_grid = (self.x // grid_blockSize, self.y // grid_blockSize)
+        gap_grid = (spawn_gap_pos[0] // grid_blockSize, spawn_gap_pos[1] // grid_blockSize)
+
+        if ghost_grid == gap_grid:
+            return
+
+        path = self.a_star_pathfind(ghost_grid, gap_grid, wall_list, grid_blockSize, grid_width, grid_height)
+        if path:
+            next_cell = path[0]
+            self.target_x = next_cell[0] * grid_blockSize
+            self.target_y = next_cell[1] * grid_blockSize
+            self.is_moving = True
+
     def is_on_grid(self, grid_blockSize):
         return self.x % grid_blockSize == 0 and self.y % grid_blockSize == 0
 
@@ -241,4 +241,5 @@ class Enemy(pg.sprite.Sprite):
                     g_score[neighbor] = tentative_g
                     f_score[neighbor] = tentative_g + self.manhattan(neighbor, goal)
                     heapq.heappush(open_set, (f_score[neighbor], neighbor))
+        return []
         return []
