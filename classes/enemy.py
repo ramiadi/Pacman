@@ -64,6 +64,10 @@ class Enemy(pg.sprite.Sprite):
                 return True
         return False
     
+    def movementSpeed(self, speed):
+        self.movement_speed = speed
+        return speed
+
     def retreat_enemy_to_spawnRoom(self, spawn_x, spawn_y, grid, wall_list):
         grid_blockSize = grid.blockSize
         grid_width = grid.width // grid_blockSize

@@ -150,7 +150,7 @@ while continue_game:
             # power mode is active and enemies goes slower 600 / 60 fps = 10 seconds slow
             pacman.activate_power_mode(600)  
             for enemy in enemies:
-                enemy.movement_speed = 2
+                enemy.movementSpeed(2)
             # No need to set images here, handled in draw_enemy
 
     #Remove eaten power pellet from the list
@@ -164,7 +164,7 @@ while continue_game:
             # When the timer runs out, the enemies go to normal speed
             pacman.power_mode_active = False
             for enemy in enemies:
-                enemy.movement_speed = 4
+                enemy.movementSpeed(4)
 
     # End the game if the pacman touches one of the ghost
     for enemy in enemies:
