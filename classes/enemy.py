@@ -24,6 +24,7 @@ class Enemy(pg.sprite.Sprite):
         self.current_direction = random.choice(self.directions)
         self.is_retreating = False
         self.leaving_spawn = False
+        self.is_weak = False
 
     def load_enemy_image(self, path, color):
         try:
@@ -35,8 +36,8 @@ class Enemy(pg.sprite.Sprite):
             pg.draw.circle(image, color, (self.length // 2, self.width // 2), self.length // 2)
         return image
 
-    def draw_enemy(self, screen, is_weak):
-        img = self.weak_image if is_weak else self.normal_image
+    def draw_enemy(self, screen,):
+        img = self.weak_image if self.is_weak else self.normal_image
         screen.blit(img, (self.x, self.y))
 
     def calculate_target(self, direction, grid_blockSize):
@@ -64,7 +65,7 @@ class Enemy(pg.sprite.Sprite):
                 return True
         return False
     
-    def movementSpeed(self, speed):
+    def movement_enemy_speed(self, speed):
         self.movement_speed = speed
         return speed
 
@@ -245,5 +246,4 @@ class Enemy(pg.sprite.Sprite):
                     g_score[neighbor] = tentative_g
                     f_score[neighbor] = tentative_g + self.manhattan(neighbor, goal)
                     heapq.heappush(open_set, (f_score[neighbor], neighbor))
-        return []
         return []

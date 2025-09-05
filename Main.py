@@ -115,6 +115,12 @@ while continue_game:
     for enemy in enemies:
         if enemy.is_retreating:
             enemy.retreat_enemy_to_spawnRoom(spawn_target_x, spawn_target_y, grid, wall)
+            # Check if enemy is inside the spawn room
+            if (spawnRoom.x <= enemy.x < spawnRoom.x + spawnRoom.width and
+                spawnRoom.y <= enemy.y < spawnRoom.y + spawnRoom.height):
+                enemy.movement_enemy_speed(4)  # Reset speed to normal
+                enemy.is_retreating = False
+                enemy.is_weak = False
         elif enemy.leaving_spawn:
             # Spawnroom gap at top center
             spawn_gap_x = spawnRoom.x + (spawnRoom.width // 2 // grid.blockSize) * grid.blockSize
@@ -150,7 +156,8 @@ while continue_game:
             # power mode is active and enemies goes slower 600 / 60 fps = 10 seconds slow
             pacman.activate_power_mode(600)  
             for enemy in enemies:
-                enemy.movementSpeed(2)
+                enemy.movement_enemy_speed(2)
+                enemy.is_weak = True
             # No need to set images here, handled in draw_enemy
 
     #Remove eaten power pellet from the list
@@ -164,13 +171,14 @@ while continue_game:
             # When the timer runs out, the enemies go to normal speed
             pacman.power_mode_active = False
             for enemy in enemies:
-                enemy.movementSpeed(4)
+                enemy.movement_enemy_speed(4)
 
     # End the game if the pacman touches one of the ghost
     for enemy in enemies:
         if enemy.check_collision_pacman_enemy(pacman):
             if pacman.power_mode_active:
                 enemy.is_retreating = True
+                enemy.movement_enemy_speed(8)
             else:
                 continue_game = False
 
@@ -200,7 +208,7 @@ while continue_game:
 
     # Draw Enemies
     for enemy in enemies:
-        enemy.draw_enemy(vindu, pacman.power_mode_active)
+        enemy.draw_enemy(vindu)
     
     # After drawing enemies, check if any normal ghost is stuck in spawn room and not already leaving
     for enemy in enemies:
