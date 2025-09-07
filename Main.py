@@ -168,10 +168,12 @@ while continue_game:
     if pacman.power_mode_active:
         pacman.power_mode_timer -= 1
         if pacman.power_mode_timer <= 0:
+            pacman.power_mode_active = False
             # When the timer runs out, the enemies go to normal speed
             pacman.power_mode_active = False
             for enemy in enemies:
                 enemy.movement_enemy_speed(4)
+                enemy.is_weak = False
 
     # End the game if the pacman touches one of the ghost
     for enemy in enemies:
