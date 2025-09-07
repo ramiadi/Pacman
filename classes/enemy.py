@@ -4,7 +4,7 @@ import heapq
 from os.path import join
 
 class Enemy(pg.sprite.Sprite):
-    def __init__(self, x, y, length, width, image_path, fallback_color, weak_image_path=None):
+    def __init__(self, x, y, length, width, image_path, fallback_color, weak_image_path=None, eyes_image_path=None):
         super().__init__()
         self.x = x
         self.y = y
@@ -12,10 +12,14 @@ class Enemy(pg.sprite.Sprite):
         self.width = width
         self.image_path = image_path
         self.fallback_color = fallback_color
-        self.weak_image_path = weak_image_path if weak_image_path else "pictures/eaten_ghost.png"
+
         # Load both images at init
-        self.normal_image = self.load_enemy_image(self.image_path, self.fallback_color)
-        self.weak_image = self.load_enemy_image(self.weak_image_path, (0, 0, 139))
+        self.images = {
+            "normal": self.load_enemy_image(image_path, fallback_color),
+            "weak": self.load_enemy_image(weak_image_path if weak_image_path else "pictures/eaten_ghost.png", (0, 0, 139)),
+            "eyes": self.load_enemy_image(eyes_image_path, (255, 255, 255)) if eyes_image_path else None
+        }
+
         self.target_x = x
         self.target_y = y
         self.is_moving = False
@@ -36,8 +40,13 @@ class Enemy(pg.sprite.Sprite):
             pg.draw.circle(image, color, (self.length // 2, self.width // 2), self.length // 2)
         return image
 
-    def draw_enemy(self, screen,):
-        img = self.weak_image if self.is_weak else self.normal_image
+    def draw_enemy(self, screen):
+        if self.is_retreating and self.images["eyes"]:
+            img = self.images["eyes"]
+        elif self.is_weak:
+            img = self.images["weak"]
+        else:
+            img = self.images["normal"]
         screen.blit(img, (self.x, self.y))
 
     def calculate_target(self, direction, grid_blockSize):

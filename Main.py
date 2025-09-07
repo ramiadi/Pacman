@@ -30,7 +30,7 @@ spawn_target_y = spawnRoom.y + (spawnRoom.height // 2 // grid.blockSize) * grid.
 # Create food
 food = Food(40, 50, 200, 200)
 # Create Enemies (add weak_image_path argument)
-red_ghost = Enemy(grid.blockSize * 10, grid.blockSize * 12 , grid.blockSize, grid.blockSize, "pictures/enemy_red.png", (255, 0, 0), "pictures/eaten_ghost.png")
+red_ghost = Enemy(grid.blockSize * 10, grid.blockSize * 12 , grid.blockSize, grid.blockSize, "pictures/enemy_red.png", (255, 0, 0), "pictures/eaten_ghost.png", "pictures/enemy_eyes.png")
 green_ghost = Enemy(grid.blockSize * 5, grid.blockSize * 14 , grid.blockSize, grid.blockSize, "pictures/enemy_green.png", (255, 184, 255), "pictures/eaten_ghost.png")
 blue_ghost = Enemy(grid.blockSize * 15 , grid.blockSize * 3, grid.blockSize, grid.blockSize, "pictures/enemy_blue.png",(0, 255, 255), "pictures/eaten_ghost.png")
 orange_ghost = Enemy(grid.blockSize * 18, grid.blockSize * 7, grid.blockSize, grid.blockSize, "pictures/enemy_orange.png", (255, 184, 82), "pictures/eaten_ghost.png")
@@ -133,6 +133,7 @@ while continue_game:
                 enemy.target_y = spawn_gap_y - grid.blockSize
                 enemy.is_moving = True
                 enemy.leaving_spawn = False
+            
         else:
             if enemy == red_ghost:
                 enemy.chase_towards_pacman(pacman, grid, wall)
@@ -178,7 +179,7 @@ while continue_game:
     # End the game if the pacman touches one of the ghost
     for enemy in enemies:
         if enemy.check_collision_pacman_enemy(pacman):
-            if pacman.power_mode_active:
+            if pacman.power_mode_active and enemy.is_weak:
                 enemy.is_retreating = True
                 enemy.movement_enemy_speed(8)
             else:
