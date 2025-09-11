@@ -4,7 +4,7 @@ import heapq
 from os.path import join
 
 class Enemy(pg.sprite.Sprite):
-    def __init__(self, x, y, length, width, image_path, fallback_color, weak_image_path=None):
+    def __init__(self, x, y, length, width, image_path, fallback_color, weak_image_path=None, eyes_image_path=None):
         super().__init__()
         self.x = x
         self.y = y
@@ -12,16 +12,25 @@ class Enemy(pg.sprite.Sprite):
         self.width = width
         self.image_path = image_path
         self.fallback_color = fallback_color
-        self.weak_image_path = weak_image_path if weak_image_path else "pictures/eaten_ghost.png"
+
         # Load both images at init
-        self.normal_image = self.load_enemy_image(self.image_path, self.fallback_color)
-        self.weak_image = self.load_enemy_image(self.weak_image_path, (0, 0, 139))
+        self.images = {
+            "normal": self.load_enemy_image(image_path, fallback_color),
+            "weak": self.load_enemy_image(weak_image_path if weak_image_path else "pictures/eaten_ghost.png", (0, 0, 139)),
+            "eyes": self.load_enemy_image(eyes_image_path, (255, 255, 255)) if eyes_image_path else None
+        }
+
         self.target_x = x
         self.target_y = y
         self.is_moving = False
         self.movement_speed = 4
         self.directions = ["up", "down", "left", "right"]
         self.current_direction = random.choice(self.directions)
+        self.is_retreating = False
+        self.leaving_spawn = False
+        self.is_weak = False
+        self.just_eaten = False
+        self.pause_timer = 0
 
     def load_enemy_image(self, path, color):
         try:
@@ -33,8 +42,13 @@ class Enemy(pg.sprite.Sprite):
             pg.draw.circle(image, color, (self.length // 2, self.width // 2), self.length // 2)
         return image
 
-    def draw_enemy(self, screen, is_weak):
-        img = self.weak_image if is_weak else self.normal_image
+    def draw_enemy(self, screen):
+        if self.is_retreating and self.images["eyes"]:
+            img = self.images["eyes"]
+        elif self.is_weak:
+            img = self.images["weak"]
+        else:
+            img = self.images["normal"]
         screen.blit(img, (self.x, self.y))
 
     def calculate_target(self, direction, grid_blockSize):
@@ -61,7 +75,34 @@ class Enemy(pg.sprite.Sprite):
             if wall.x == x and wall.y == y:
                 return True
         return False
+    
+    def movement_enemy_speed(self, speed):
+        self.movement_speed = speed
+        return speed
+    
+    def retreat_enemy_to_spawnRoom(self, spawn_x, spawn_y, grid, wall_list):
+        grid_blockSize = grid.blockSize
+        grid_width = grid.width // grid_blockSize
+        grid_height = grid.height // grid_blockSize
 
+        if not self.is_on_grid(grid_blockSize):
+            return
+    
+        ghost_grid = (self.x // grid_blockSize, self.y // grid_blockSize)
+        spawn_grid = (spawn_x // grid_blockSize, spawn_y // grid_blockSize)
+
+        if ghost_grid == spawn_grid:
+            self.is_retreating = False
+            self.leaving_spawn = True
+            return
+
+        path = self.a_star_pathfind(ghost_grid, spawn_grid, wall_list, grid_blockSize, grid_width, grid_height)
+        if path:
+            next_cell = path[0]
+            self.target_x = next_cell[0] * grid_blockSize
+            self.target_y = next_cell[1] * grid_blockSize
+            self.is_moving = True
+        
     def find_valid_direction(self, grid_blockSize, wall_list):
         # Try current direction first
         new_target_x, new_target_y = self.calculate_target(self.current_direction, grid_blockSize)
@@ -130,6 +171,28 @@ class Enemy(pg.sprite.Sprite):
         pacman_rect = pg.Rect(pacman.x + pacman.length // 4, pacman.y + pacman.width // 4, pacman.length // 2, pacman.width // 2)
         return enemy_rect.colliderect(pacman_rect)
     
+
+    def leave_spawn(self, spawn_gap_pos, grid, wall_list):
+        grid_blockSize = grid.blockSize
+        grid_width = grid.width // grid_blockSize
+        grid_height = grid.height // grid_blockSize
+
+        if not self.is_on_grid(grid_blockSize):
+            return
+
+        ghost_grid = (self.x // grid_blockSize, self.y // grid_blockSize)
+        gap_grid = (spawn_gap_pos[0] // grid_blockSize, spawn_gap_pos[1] // grid_blockSize)
+
+        if ghost_grid == gap_grid:
+            return
+
+        path = self.a_star_pathfind(ghost_grid, gap_grid, wall_list, grid_blockSize, grid_width, grid_height)
+        if path:
+            next_cell = path[0]
+            self.target_x = next_cell[0] * grid_blockSize
+            self.target_y = next_cell[1] * grid_blockSize
+            self.is_moving = True
+
     def is_on_grid(self, grid_blockSize):
         return self.x % grid_blockSize == 0 and self.y % grid_blockSize == 0
 
