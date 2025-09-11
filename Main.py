@@ -1,4 +1,5 @@
 import pygame as pg
+import time
 from pygame.locals import (K_UP, K_DOWN, K_LEFT, K_RIGHT, K_w, K_s, K_a, K_d)
 from classes.pacman import Pacman
 from classes.enemy import Enemy
@@ -16,6 +17,8 @@ VINDU_HOYDE = 600
 vindu = pg.display.set_mode([VINDU_BREDDE, VINDU_HOYDE])
 dt = 0
 clock = pg.time.Clock()
+pause_timer = 0
+pause_duration = 60 # 1 second at 60 fps
 
 # display title
 pg.display.set_caption("Pacman Game")
@@ -31,9 +34,9 @@ spawn_target_y = spawnRoom.y + (spawnRoom.height // 2 // grid.blockSize) * grid.
 food = Food(40, 50, 200, 200)
 # Create Enemies (add weak_image_path argument)
 red_ghost = Enemy(grid.blockSize * 10, grid.blockSize * 12 , grid.blockSize, grid.blockSize, "pictures/enemy_red.png", (255, 0, 0), "pictures/eaten_ghost.png", "pictures/enemy_eyes.png")
-green_ghost = Enemy(grid.blockSize * 5, grid.blockSize * 14 , grid.blockSize, grid.blockSize, "pictures/enemy_green.png", (255, 184, 255), "pictures/eaten_ghost.png")
-blue_ghost = Enemy(grid.blockSize * 15 , grid.blockSize * 3, grid.blockSize, grid.blockSize, "pictures/enemy_blue.png",(0, 255, 255), "pictures/eaten_ghost.png")
-orange_ghost = Enemy(grid.blockSize * 18, grid.blockSize * 7, grid.blockSize, grid.blockSize, "pictures/enemy_orange.png", (255, 184, 82), "pictures/eaten_ghost.png")
+green_ghost = Enemy(grid.blockSize * 5, grid.blockSize * 14 , grid.blockSize, grid.blockSize, "pictures/enemy_green.png", (255, 184, 255), "pictures/eaten_ghost.png", "pictures/enemy_eyes.png")
+blue_ghost = Enemy(grid.blockSize * 15 , grid.blockSize * 3, grid.blockSize, grid.blockSize, "pictures/enemy_blue.png",(0, 255, 255), "pictures/eaten_ghost.png", "pictures/enemy_eyes.png")
+orange_ghost = Enemy(grid.blockSize * 18, grid.blockSize * 7, grid.blockSize, grid.blockSize, "pictures/enemy_orange.png", (255, 184, 82), "pictures/eaten_ghost.png", "pictures/enemy_eyes.png")
 enemies = [red_ghost, green_ghost, blue_ghost, orange_ghost]
 # Create border walls using the Wall class method
 wall_generator = Wall(0, 0, 0, 0)  # Temporary instance
@@ -98,7 +101,15 @@ continue_game = True
 while continue_game:
     # The game runs in 60 fps
     clock.tick(60)
-    
+
+    if pause_timer > 0:
+        pause_timer -= 1
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                continue_game = False
+        pg.display.flip()
+        continue
+
     # Update animation counter in Grid class
     grid.update_animation()
     
@@ -121,6 +132,7 @@ while continue_game:
                 enemy.movement_enemy_speed(4)  # Reset speed to normal
                 enemy.is_retreating = False
                 enemy.is_weak = False
+                enemy.just_eaten = False
         elif enemy.leaving_spawn:
             # Spawnroom gap at top center
             spawn_gap_x = spawnRoom.x + (spawnRoom.width // 2 // grid.blockSize) * grid.blockSize
@@ -179,10 +191,13 @@ while continue_game:
     # End the game if the pacman touches one of the ghost
     for enemy in enemies:
         if enemy.check_collision_pacman_enemy(pacman):
-            if pacman.power_mode_active and enemy.is_weak:
+            if pacman.power_mode_active and enemy.is_weak and not enemy.just_eaten:
                 enemy.is_retreating = True
                 enemy.movement_enemy_speed(8)
-            else:
+                enemy.just_eaten = True
+                if pause_timer == 0:  # Only set the pause if not already paused
+                    pause_timer = pause_duration
+            elif not (pacman.power_mode_active and enemy.is_weak):
                 continue_game = False
 
     # Check for teleportation (calculate gap_y same way as in border_wall method)

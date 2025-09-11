@@ -29,6 +29,8 @@ class Enemy(pg.sprite.Sprite):
         self.is_retreating = False
         self.leaving_spawn = False
         self.is_weak = False
+        self.just_eaten = False
+        self.pause_timer = 0
 
     def load_enemy_image(self, path, color):
         try:
@@ -77,7 +79,7 @@ class Enemy(pg.sprite.Sprite):
     def movement_enemy_speed(self, speed):
         self.movement_speed = speed
         return speed
-
+    
     def retreat_enemy_to_spawnRoom(self, spawn_x, spawn_y, grid, wall_list):
         grid_blockSize = grid.blockSize
         grid_width = grid.width // grid_blockSize
