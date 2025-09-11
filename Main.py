@@ -1,5 +1,4 @@
 import pygame as pg
-import time
 from pygame.locals import (K_UP, K_DOWN, K_LEFT, K_RIGHT, K_w, K_s, K_a, K_d)
 from classes.pacman import Pacman
 from classes.enemy import Enemy
