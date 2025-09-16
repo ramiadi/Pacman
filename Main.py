@@ -45,33 +45,38 @@ wall = wall_generator.border_wall(VINDU_BREDDE, VINDU_HOYDE, grid.blockSize)
 spawn_walls = spawnRoom.create_spawn_walls(grid.blockSize)
 wall.extend(spawn_walls)
 
-wall_gap_corridor_right = wall_generator.create_corridor(
-    start_x=grid.blockSize * 23,
-    start_y= grid.blockSize * 7,
-    length=grid.blockSize * 1,
-    direction='horizontal',
-    grid_blockSize=grid.blockSize
-)
-wall.extend(wall_gap_corridor_right)
+# Alternative: Maze layout using grid + for-loop
+# 1 = wall, 0 = empty
+maze_layout = [
+    "000000000000000000000000",  # row 0 -> border already handled
+    "000000000100000000000000",  # row 1
+    "001001101110110011110110",  # row 2 -> internal walls
+    "001101000010011000100100",  # row 3
+    "001100000000001010101101",  # row 4
+    "000000000000100010101000",  # row 5
+    "000110000000111110000010",  # row 6
+    "000000000010010000111000",  # row 7
+    "001100000000010111100010",  # row 8
+    "001100000000000000001110",  # row 9
+    "000001110110010101000000",  # row 10
+    "001100000100110111100110",  # row 11
+    "000110111110100000111100",  # row 12
+    "000000000000001110000000",  # row 13
+    "000000000000000000000000"   # row 14 -> border already handled
+]
 
-wall_gap_corridor_left = wall_generator.create_corridor(
-    start_x=grid.blockSize * 1,
-    start_y= grid.blockSize * 7,
-    length=grid.blockSize * 1,
-    direction='horizontal',
-    grid_blockSize=grid.blockSize
-)
-wall.extend(wall_gap_corridor_left)
-
-l_test = wall_generator.create_l_corridor(
-    corner_x=grid.blockSize * 2,
-    corner_y=grid.blockSize * 9, 
-    h_length=grid.blockSize * 1,
-    v_length=grid.blockSize * 2,
-    grid_blockSize=grid.blockSize,
-    opening_direction= 'left_up'
-)
-wall.extend(l_test)
+# Build walls from the layout
+for row, line in enumerate(maze_layout):
+    for col, char in enumerate(line):
+        if char == "1":
+            wall_piece = wall_generator.create_single_wall_line(
+                start_x=col * grid.blockSize,
+                start_y=row * grid.blockSize,
+                length=1,   # just one block
+                direction='horizontal',
+                grid_blockSize=grid.blockSize
+            )
+            wall.extend(wall_piece)
 
 # Create all food pellets everywhere (after all walls are created)
 food_generator = Food(0, 0, 0, 0)  # Temporary instance for generation
