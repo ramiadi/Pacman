@@ -66,98 +66,12 @@ class Wall:
                 walls.append(Wall(window_width - grid_blockSize, y, grid_blockSize, grid_blockSize)) 
         return walls
 
-    def create_corridor(self, start_x, start_y, length, direction, grid_blockSize):
+    def create_single_wall_line(self, start_x, start_y, length, grid_blockSize):
         walls = []
 
-        # Validate direction
-        if direction not in ['horizontal', 'vertical']:
-            return walls
-
-        # Ensure grid alignment
         start_x = (start_x // grid_blockSize) * grid_blockSize
         start_y = (start_y // grid_blockSize) * grid_blockSize
 
-        if direction == 'horizontal':
-            # Top wall (above corridor)
-            for x in range(start_x, start_x + length, grid_blockSize):
-                walls.append(Wall(x, start_y - grid_blockSize, grid_blockSize, grid_blockSize))
-
-            # Bottom wall (below corridor)
-            for x in range(start_x, start_x + length, grid_blockSize):
-                walls.append(Wall(x, start_y + grid_blockSize, grid_blockSize, grid_blockSize))
-                 
-        elif direction == 'vertical':
-            # Left wall (left of corridor)
-            for y in range(start_y, start_y + length, grid_blockSize):
-                walls.append(Wall(start_x - grid_blockSize, y, grid_blockSize, grid_blockSize))
-
-            # Right wall (right of corridor)
-            for y in range(start_y, start_y + length, grid_blockSize):
-                walls.append(Wall(start_x + grid_blockSize, y, grid_blockSize, grid_blockSize))
-
+        for x in range(start_x, start_x + length, grid_blockSize):
+            walls.append(Wall(x, start_y, grid_blockSize, grid_blockSize))
         return walls
-
-    def create_l_corridor(self, corner_x, corner_y, h_length, v_length, grid_blockSize, opening_direction):
-        walls = []
-        # TODO: Implement L-corridor logic
-
-        corner_x = (corner_x // grid_blockSize) * grid_blockSize
-        corner_y = (corner_y // grid_blockSize) * grid_blockSize
-
-        # Add validation checks
-
-        # if the direction doesnt match with what is written, return empty
-        if opening_direction not in ['right_down', 'left_down', 'right_up', 'left_up']:
-            return walls
-        # if the length (horizontal or vertical) is not defined by a positive number, return empty
-        if h_length <= 0 or v_length <= 0:
-            return walls
-
-        # Make a method for directions to make the code more DRY (do not repeat yourself)
-        def create_h_line(start_x, end_x, y_pos):
-            for x in range(start_x, end_x, grid_blockSize):
-                walls.append(Wall(x, y_pos, grid_blockSize, grid_blockSize))
-        
-        def create_v_line(start_y, end_y, x_pos):
-            for y in range(start_y, end_y, grid_blockSize):
-                walls.append(Wall(x_pos, y, grid_blockSize, grid_blockSize))
-        
-        def create_border(x_pos, y_pos):
-            walls.append(Wall(x_pos, y_pos, grid_blockSize, grid_blockSize))
-
-        # Wall shapes
-        # right_down
-        #   - - - - - - - -
-        #   |
-        #   |
-        if opening_direction == 'right_down':
-            create_h_line(corner_x, corner_x + h_length, corner_y - grid_blockSize)
-            create_v_line(corner_y, corner_y + v_length, corner_x - grid_blockSize)
-            create_border(corner_x - grid_blockSize, corner_y - grid_blockSize)
-        # left_down
-        # - - - - - - -
-        #             |
-        #             |
-        elif opening_direction == 'left_down':
-            create_h_line(corner_x - h_length + grid_blockSize, corner_x + grid_blockSize, corner_y - grid_blockSize)
-            create_v_line(corner_y, corner_y + v_length, corner_x + grid_blockSize)
-            create_border(corner_x + grid_blockSize, corner_y - grid_blockSize)
-
-        # right_up
-        # |
-        # |
-        # - - - - - - - -
-        elif opening_direction == 'right_up':
-            create_h_line(corner_x, corner_x + h_length, corner_y + grid_blockSize)
-            create_v_line(corner_y - v_length + grid_blockSize, corner_y + grid_blockSize, corner_x - grid_blockSize)
-            create_border(corner_x - grid_blockSize, corner_y + grid_blockSize)
-
-        # left_up
-        #                 |
-        #                 |
-        # - - - - - - - - -
-        elif opening_direction == 'left_up':
-            create_h_line(corner_x - h_length + grid_blockSize, corner_x + grid_blockSize, corner_y + grid_blockSize)
-            create_v_line(corner_y - v_length + grid_blockSize, corner_y + grid_blockSize, corner_x + grid_blockSize)
-            create_border(corner_x + grid_blockSize, corner_y + grid_blockSize)
-        return walls 

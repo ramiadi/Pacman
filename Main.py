@@ -21,22 +21,28 @@ pause_duration = 60 # 1 second at 60 fps
 
 # display title
 pg.display.set_caption("Pacman Game")
+
 # Create Grid
 grid = Grid(0, 0, VINDU_HOYDE, VINDU_BREDDE, 40)
+
 # Create Pacman
 pacman = Pacman(400, 320, grid.blockSize, grid.blockSize, K_UP, K_DOWN, K_LEFT, K_RIGHT)
+
 # Create spawn room (grid-aligned)
 spawnRoom = SpawnRoom(grid.blockSize * 5, grid.blockSize * 5, grid.blockSize * 4, grid.blockSize * 5)
 spawn_target_x = spawnRoom.x + (spawnRoom.width // 2 // grid.blockSize) * grid.blockSize
 spawn_target_y = spawnRoom.y + (spawnRoom.height // 2 // grid.blockSize) * grid.blockSize
+
 # Create food
 food = Food(40, 50, 200, 200)
+
 # Create Enemies (add weak_image_path argument)
 red_ghost = Enemy(grid.blockSize * 10, grid.blockSize * 12 , grid.blockSize, grid.blockSize, "pictures/enemy_red.png", (255, 0, 0), "pictures/eaten_ghost.png", "pictures/enemy_eyes.png")
 green_ghost = Enemy(grid.blockSize * 5, grid.blockSize * 14 , grid.blockSize, grid.blockSize, "pictures/enemy_green.png", (255, 184, 255), "pictures/eaten_ghost.png", "pictures/enemy_eyes.png")
 blue_ghost = Enemy(grid.blockSize * 15 , grid.blockSize * 3, grid.blockSize, grid.blockSize, "pictures/enemy_blue.png",(0, 255, 255), "pictures/eaten_ghost.png", "pictures/enemy_eyes.png")
 orange_ghost = Enemy(grid.blockSize * 18, grid.blockSize * 7, grid.blockSize, grid.blockSize, "pictures/enemy_orange.png", (255, 184, 82), "pictures/eaten_ghost.png", "pictures/enemy_eyes.png")
 enemies = [red_ghost, green_ghost, blue_ghost, orange_ghost]
+
 # Create border walls using the Wall class method
 wall_generator = Wall(0, 0, 0, 0)  # Temporary instance
 wall = wall_generator.border_wall(VINDU_BREDDE, VINDU_HOYDE, grid.blockSize)
@@ -45,33 +51,36 @@ wall = wall_generator.border_wall(VINDU_BREDDE, VINDU_HOYDE, grid.blockSize)
 spawn_walls = spawnRoom.create_spawn_walls(grid.blockSize)
 wall.extend(spawn_walls)
 
-wall_gap_corridor_right = wall_generator.create_corridor(
-    start_x=grid.blockSize * 23,
-    start_y= grid.blockSize * 7,
-    length=grid.blockSize * 1,
-    direction='horizontal',
-    grid_blockSize=grid.blockSize
-)
-wall.extend(wall_gap_corridor_right)
-
-wall_gap_corridor_left = wall_generator.create_corridor(
-    start_x=grid.blockSize * 1,
-    start_y= grid.blockSize * 7,
-    length=grid.blockSize * 1,
-    direction='horizontal',
-    grid_blockSize=grid.blockSize
-)
-wall.extend(wall_gap_corridor_left)
-
-l_test = wall_generator.create_l_corridor(
-    corner_x=grid.blockSize * 2,
-    corner_y=grid.blockSize * 9, 
-    h_length=grid.blockSize * 1,
-    v_length=grid.blockSize * 2,
-    grid_blockSize=grid.blockSize,
-    opening_direction= 'left_up'
-)
-wall.extend(l_test)
+# Alternative: Maze layout using grid + for-loop
+# 1 = wall, 0 = empty
+maze_layout = [
+    "000000000000000000000000",  # row 0 -> border already handled
+    "000000000100000000000000",  # row 1
+    "001001101110110011110110",  # row 2 -> internal walls
+    "001101000010011000100100",  # row 3
+    "001100000000001010101101",  # row 4
+    "000000000000100010101000",  # row 5
+    "000110000000111110000010",  # row 6
+    "000000000010010000111000",  # row 7
+    "001100000000010111100010",  # row 8
+    "001100000000000000001110",  # row 9
+    "000001110110010101000000",  # row 10
+    "001100000100110111100110",  # row 11
+    "000110111110100000111100",  # row 12
+    "000000000000001110000000",  # row 13
+    "000000000000000000000000"   # row 14 -> border already handled
+]
+# Build walls from the layout
+for row, line in enumerate(maze_layout):
+    for col, char in enumerate(line):
+        if char == "1":
+            wall_piece = wall_generator.create_single_wall_line(
+                start_x=col * grid.blockSize,
+                start_y=row * grid.blockSize,
+                length=1,   # just one block
+                grid_blockSize=grid.blockSize
+            )
+            wall.extend(wall_piece)
 
 # Create all food pellets everywhere (after all walls are created)
 food_generator = Food(0, 0, 0, 0)  # Temporary instance for generation
@@ -146,9 +155,9 @@ while continue_game:
                 enemy.leaving_spawn = False
             
         else:
-            if enemy == red_ghost:
-                enemy.chase_towards_pacman(pacman, grid, wall)
-        enemy.moveEnemy(grid.blockSize, wall)
+            #if enemy == red_ghost:
+            #    enemy.chase_towards_pacman(pacman, grid, wall)
+            enemy.moveEnemy(grid.blockSize, wall)
 
     # Check food collision and remove eaten food
     foods_to_remove = []
