@@ -155,8 +155,8 @@ while continue_game:
                 enemy.leaving_spawn = False
             
         else:
-            #if enemy == red_ghost:
-            #    enemy.chase_towards_pacman(pacman, grid, wall)
+            # if enemy == red_ghost:
+            #     enemy.chase_towards_pacman(pacman, grid, wall)
             enemy.moveEnemy(grid.blockSize, wall)
 
     # Check food collision and remove eaten food

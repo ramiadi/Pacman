@@ -219,6 +219,20 @@ class Enemy(pg.sprite.Sprite):
             self.target_y = next_cell[1] * grid_blockSize
             self.is_moving = True
     
+    def send_clyde_to_home(self, pacman, grid, wall_list):
+        grid_blockSize = grid.blockSize
+        grid_width = grid.width // grid_blockSize  
+        grid_height = grid.height // grid_blockSize 
+
+        # Only update path if enemy is perfectly aligned to the grid
+        if not self.is_on_grid(grid_blockSize):
+            return        
+
+        ghost_grid = (self.x // grid_blockSize, self.y // grid_blockSize)
+        pacman_grid = (pacman.x // grid_blockSize, pacman.y // grid_blockSize)
+
+    
+
     # Every line under, is almost a copy of this website: https://www.geeksforgeeks.org/dsa/a-search-algorithm/
     @staticmethod
     def manhattan(a, b):

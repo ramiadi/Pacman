@@ -79,7 +79,7 @@ class Pacman:
             elif button[self.key_down]:
                 new_target_y += grid_blockSize
             elif button[self.key_left]:
-                 new_target_x -= grid_blockSize
+                new_target_x -= grid_blockSize
             elif button[self.key_right]:
                 new_target_x += grid_blockSize
 
