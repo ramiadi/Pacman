@@ -21,22 +21,28 @@ pause_duration = 60 # 1 second at 60 fps
 
 # display title
 pg.display.set_caption("Pacman Game")
+
 # Create Grid
 grid = Grid(0, 0, VINDU_HOYDE, VINDU_BREDDE, 40)
+
 # Create Pacman
 pacman = Pacman(400, 320, grid.blockSize, grid.blockSize, K_UP, K_DOWN, K_LEFT, K_RIGHT)
+
 # Create spawn room (grid-aligned)
 spawnRoom = SpawnRoom(grid.blockSize * 5, grid.blockSize * 5, grid.blockSize * 4, grid.blockSize * 5)
 spawn_target_x = spawnRoom.x + (spawnRoom.width // 2 // grid.blockSize) * grid.blockSize
 spawn_target_y = spawnRoom.y + (spawnRoom.height // 2 // grid.blockSize) * grid.blockSize
+
 # Create food
 food = Food(40, 50, 200, 200)
+
 # Create Enemies (add weak_image_path argument)
 red_ghost = Enemy(grid.blockSize * 10, grid.blockSize * 12 , grid.blockSize, grid.blockSize, "pictures/enemy_red.png", (255, 0, 0), "pictures/eaten_ghost.png", "pictures/enemy_eyes.png")
 green_ghost = Enemy(grid.blockSize * 5, grid.blockSize * 14 , grid.blockSize, grid.blockSize, "pictures/enemy_green.png", (255, 184, 255), "pictures/eaten_ghost.png", "pictures/enemy_eyes.png")
 blue_ghost = Enemy(grid.blockSize * 15 , grid.blockSize * 3, grid.blockSize, grid.blockSize, "pictures/enemy_blue.png",(0, 255, 255), "pictures/eaten_ghost.png", "pictures/enemy_eyes.png")
 orange_ghost = Enemy(grid.blockSize * 18, grid.blockSize * 7, grid.blockSize, grid.blockSize, "pictures/enemy_orange.png", (255, 184, 82), "pictures/eaten_ghost.png", "pictures/enemy_eyes.png")
 enemies = [red_ghost, green_ghost, blue_ghost, orange_ghost]
+
 # Create border walls using the Wall class method
 wall_generator = Wall(0, 0, 0, 0)  # Temporary instance
 wall = wall_generator.border_wall(VINDU_BREDDE, VINDU_HOYDE, grid.blockSize)
@@ -64,7 +70,6 @@ maze_layout = [
     "000000000000001110000000",  # row 13
     "000000000000000000000000"   # row 14 -> border already handled
 ]
-
 # Build walls from the layout
 for row, line in enumerate(maze_layout):
     for col, char in enumerate(line):
@@ -73,7 +78,6 @@ for row, line in enumerate(maze_layout):
                 start_x=col * grid.blockSize,
                 start_y=row * grid.blockSize,
                 length=1,   # just one block
-                direction='horizontal',
                 grid_blockSize=grid.blockSize
             )
             wall.extend(wall_piece)
@@ -151,9 +155,9 @@ while continue_game:
                 enemy.leaving_spawn = False
             
         else:
-            if enemy == red_ghost:
-                enemy.chase_towards_pacman(pacman, grid, wall)
-        enemy.moveEnemy(grid.blockSize, wall)
+            #if enemy == red_ghost:
+            #    enemy.chase_towards_pacman(pacman, grid, wall)
+            enemy.moveEnemy(grid.blockSize, wall)
 
     # Check food collision and remove eaten food
     foods_to_remove = []

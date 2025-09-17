@@ -66,19 +66,12 @@ class Wall:
                 walls.append(Wall(window_width - grid_blockSize, y, grid_blockSize, grid_blockSize)) 
         return walls
 
-    def create_single_wall_line(self, start_x, start_y, length, direction, grid_blockSize):
+    def create_single_wall_line(self, start_x, start_y, length, grid_blockSize):
         walls = []
 
-        if direction not in ['horizontal', 'vertical']:
-            return walls
-        
         start_x = (start_x // grid_blockSize) * grid_blockSize
         start_y = (start_y // grid_blockSize) * grid_blockSize
 
-        if direction == 'horizontal':
-            for x in range(start_x, start_x + length, grid_blockSize):
-                walls.append(Wall(x, start_y, grid_blockSize, grid_blockSize))
-        if direction == 'vertical':
-            for y in range(start_y, start_y + length, grid_blockSize):
-                walls.append(Wall(start_x, y, grid_blockSize, grid_blockSize))
+        for x in range(start_x, start_x + length, grid_blockSize):
+            walls.append(Wall(x, start_y, grid_blockSize, grid_blockSize))
         return walls
