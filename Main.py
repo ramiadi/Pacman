@@ -133,7 +133,10 @@ while continue_game:
     pacman.movePacman(button_pressed, grid.blockSize, wall)
     for enemy in enemies:
         if enemy.is_retreating:
-            enemy.retreat_enemy_to_spawnRoom(spawn_target_x, spawn_target_y, grid, wall)
+            if enemy.is_moving:
+                enemy.moveEnemy(grid.blockSize, wall)
+            else:
+                enemy.retreat_enemy_to_spawnRoom(spawn_target_x, spawn_target_y, grid, wall)
             # Check if enemy is inside the spawn room
             if (spawnRoom.x <= enemy.x < spawnRoom.x + spawnRoom.width and
                 spawnRoom.y <= enemy.y < spawnRoom.y + spawnRoom.height):
@@ -141,11 +144,13 @@ while continue_game:
                 enemy.is_retreating = False
                 enemy.is_weak = False
                 enemy.just_eaten = False
+                enemy.leaving_spawn = True  # Start leaving the spawn room
         elif enemy.leaving_spawn:
             # Spawnroom gap at top center
             spawn_gap_x = spawnRoom.x + (spawnRoom.width // 2 // grid.blockSize) * grid.blockSize
             spawn_gap_y = spawnRoom.y  # Top edge
             enemy.leave_spawn((spawn_gap_x, spawn_gap_y), grid, wall)
+           
             # If ghost reached the gap, smoothly move it outside
             if enemy.x == spawn_gap_x and enemy.y == spawn_gap_y:
                 # Set next movement target to one block above the gap
@@ -235,15 +240,6 @@ while continue_game:
     # Draw Enemies
     for enemy in enemies:
         enemy.draw_enemy(vindu)
-    
-    # After drawing enemies, check if any normal ghost is stuck in spawn room and not already leaving
-    for enemy in enemies:
-        if not enemy.is_retreating and not enemy.leaving_spawn:
-            # Check if ghost is inside spawn room (excluding the gap/door)
-            if (spawnRoom.x <= enemy.x < spawnRoom.x + spawnRoom.width and
-                spawnRoom.y <= enemy.y < spawnRoom.y + spawnRoom.height):
-                enemy.leaving_spawn = True
-
     # Update everything here
     pg.display.flip() 
 
