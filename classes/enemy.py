@@ -31,6 +31,7 @@ class Enemy(pg.sprite.Sprite):
         self.is_weak = False
         self.just_eaten = False
         self.pause_timer = 0
+        self.is_chasing = False
 
     def load_enemy_image(self, path, color):
         try:
@@ -196,6 +197,7 @@ class Enemy(pg.sprite.Sprite):
     def is_on_grid(self, grid_blockSize):
         return self.x % grid_blockSize == 0 and self.y % grid_blockSize == 0
 
+    # This method is for the red enemy, following the pacman
     def chase_towards_pacman(self, pacman, grid, wall_list):
         # Get grid size (in cells)
         grid_blockSize = grid.blockSize
@@ -219,20 +221,35 @@ class Enemy(pg.sprite.Sprite):
             self.target_y = next_cell[1] * grid_blockSize
             self.is_moving = True
     
-    def send_clyde_to_home(self, pacman, grid, wall_list):
-        grid_blockSize = grid.blockSize
-        grid_width = grid.width // grid_blockSize  
-        grid_height = grid.height // grid_blockSize 
+    # This method make sure the enemy chase when far, go normal when close
+    def chase_when_far_retreat_when_close(self, pacman, grid, wall_list):
+        # Find the distance to Pac-man
+        ghost_grid = (self.x // grid.blockSize, self.y // grid.blockSize)
+        pacman_grid = (pacman.x // grid.blockSize, pacman.y // grid.blockSize)
+        distance_in_grids = self.manhattan(ghost_grid, pacman_grid)
 
-        # Only update path if enemy is perfectly aligned to the grid
-        if not self.is_on_grid(grid_blockSize):
-            return        
+        # Define corner position
+        corner_x = grid.blockSize * 2
+        corner_y = grid.blockSize * 12
+        corner_grid = (corner_x // grid.blockSize, corner_y // grid.blockSize)
 
-        ghost_grid = (self.x // grid_blockSize, self.y // grid_blockSize)
-        pacman_grid = (pacman.x // grid_blockSize, pacman.y // grid_blockSize)
+        at_corner = (ghost_grid == corner_grid)
 
+        if distance_in_grids >= 9 and (self.is_chasing or at_corner):
+            self.is_chasing = True
+        elif distance_in_grids <= 6:
+            self.is_chasing = False
+        
+        if self.is_chasing:
+            self.chase_towards_pacman(pacman, grid, wall_list)
+        else:
+            if ghost_grid == corner_grid:
+                pass
+            else:
+                self.retreat_enemy_to_spawnRoom(corner_x, corner_y, grid, wall_list)
+            
+        self.moveEnemy(grid.blockSize, wall_list)
     
-
     # Every line under, is almost a copy of this website: https://www.geeksforgeeks.org/dsa/a-search-algorithm/
     @staticmethod
     def manhattan(a, b):

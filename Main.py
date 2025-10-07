@@ -150,7 +150,6 @@ while continue_game:
             spawn_gap_x = spawnRoom.x + (spawnRoom.width // 2 // grid.blockSize) * grid.blockSize
             spawn_gap_y = spawnRoom.y  # Top edge
             enemy.leave_spawn((spawn_gap_x, spawn_gap_y), grid, wall)
-           
             # If ghost reached the gap, smoothly move it outside
             if enemy.x == spawn_gap_x and enemy.y == spawn_gap_y:
                 # Set next movement target to one block above the gap
@@ -160,9 +159,12 @@ while continue_game:
                 enemy.leaving_spawn = False
             
         else:
-            # if enemy == red_ghost:
-            #     enemy.chase_towards_pacman(pacman, grid, wall)
-            enemy.moveEnemy(grid.blockSize, wall)
+            if enemy == red_ghost:
+                enemy.chase_towards_pacman(pacman, grid, wall)
+            if enemy == orange_ghost:
+                enemy.chase_when_far_retreat_when_close(pacman, grid, wall)
+            else:
+                enemy.moveEnemy(grid.blockSize, wall)
 
     # Check food collision and remove eaten food
     foods_to_remove = []

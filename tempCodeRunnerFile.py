@@ -1,1 +1,1 @@
-                enemy.leaving_spawn = True  # Start leaving the spawn room
+pause_timer
