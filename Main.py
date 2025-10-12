@@ -156,13 +156,14 @@ while continue_game:
                 enemy.target_x = spawn_gap_x
                 enemy.target_y = spawn_gap_y - grid.blockSize
                 enemy.is_moving = True
-                enemy.leaving_spawn = False
-            
+                enemy.leaving_spawn = False 
         else:
-            if enemy == red_ghost:
-                enemy.chase_towards_pacman(pacman, grid, wall)
+            # if enemy == red_ghost:
+            #   enemy.chase_towards_pacman(pacman, grid, wall)
             if enemy == orange_ghost:
                 enemy.chase_when_far_retreat_when_close(pacman, grid, wall)
+            if enemy == green_ghost:
+                enemy.enemy_ambush_behavior(pacman, grid, wall)
             else:
                 enemy.moveEnemy(grid.blockSize, wall)
 

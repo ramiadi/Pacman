@@ -250,6 +250,30 @@ class Enemy(pg.sprite.Sprite):
             
         self.moveEnemy(grid.blockSize, wall_list)
     
+    def enemy_ambush_behavior(self, pacman, grid, wall_list):
+        # Calculate distance first
+        ghost_grid = (self.x // grid.blockSize, self.y // grid.blockSize)
+        pacman_grid = (pacman.x // grid.blockSize, pacman.y // grid.blockSize)
+        distance_in_grids = self.manhattan(ghost_grid, pacman_grid)
+        
+        # Only ambush when close (within 8 tiles), otherwise move randomly
+        if distance_in_grids <= 8:
+            target_x = pacman.x
+            target_y = pacman.y
+                
+            if pacman.is_moving:
+                if pacman.target_y < pacman.y:
+                    target_y -= 2 * grid.blockSize
+                elif pacman.target_y > pacman.y:
+                    target_y += 2 * grid.blockSize
+                elif pacman.target_x < pacman.x:
+                    target_x -= 2 * grid.blockSize
+                elif pacman.target_x > pacman.x:
+                    target_x += 2 * grid.blockSize
+                
+            self.retreat_enemy_to_spawnRoom(target_x, target_y, grid, wall_list)
+        self.moveEnemy(grid.blockSize, wall_list)
+        
     # Every line under, is almost a copy of this website: https://www.geeksforgeeks.org/dsa/a-search-algorithm/
     @staticmethod
     def manhattan(a, b):
